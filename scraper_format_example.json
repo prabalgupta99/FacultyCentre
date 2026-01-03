@@ -1,0 +1,42 @@
+[
+  {
+    "name": "NALSAR University of Law",
+    "location": "Hyderabad",
+    "state": "Telangana",
+    "latitude": 17.5684,
+    "longitude": 78.5361,
+    "type": "NLU",
+    "ranking": 3,
+    "website": "https://www.nalsar.ac.in",
+    "description": "NALSAR is known for its liberal academic culture...",
+    "contacts": [
+      {
+        "name": "Prof. Srikrishna",
+        "role": "Vice Chancellor",
+        "email": "vc@nalsar.ac.in"
+      }
+    ],
+    "openings": [
+      {
+        "title": "Associate Professor (Criminal Law)",
+        "type": "ASSOCIATE_PROFESSOR",
+        "salary": "Level 13A",
+        "description": "Senior faculty position for Criminal Law department...",
+        "requirements": ["Ph.D.", "8 Years Teaching Experience"],
+        "deadline": "2023-12-01",
+        "applyLink": "https://nalsar.ac.in/careers/123"
+      }
+    ]
+  },
+  {
+    "name": "Symbiosis Law School",
+    "location": "Pune",
+    "state": "Maharashtra",
+    "latitude": 18.5779,
+    "longitude": 73.9130,
+    "type": "PRIVATE",
+    "website": "https://www.symlaw.ac.in",
+    "contacts": [],
+    "openings": []
+  }
+]

@@ -1,0 +1,7 @@
+{
+  "name": "The Faculty Centre 2.0",
+  "description": "A unified platform for finding faculty positions in Indian Law Universities with an Airbnb-style map interface.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
