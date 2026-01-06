@@ -1,8 +1,6 @@
 
-import { GoogleGenAI } from "@google/genai";
+import { supabase } from "../lib/supabase";
 import { Job, College } from "../types";
-
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const generateCoverLetter = async (
   job: Job,
@@ -28,12 +26,16 @@ export const generateCoverLetter = async (
       Return ONLY the body of the letter. Do not include placeholders like [Your Name] at the top, just the content.
     `;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: prompt,
+    const { data, error } = await supabase.functions.invoke('generate-content', {
+      body: { prompt },
     });
 
-    return response.text || "Could not generate cover letter at this time.";
+    if (error) {
+      console.error("Supabase Function Error:", error);
+      return "Could not generate cover letter at this time.";
+    }
+
+    return data.text || "Could not generate cover letter at this time.";
   } catch (error) {
     console.error("Gemini API Error:", error);
     return "Sorry, I encountered an error generating the draft. Please try again.";
@@ -41,11 +43,11 @@ export const generateCoverLetter = async (
 };
 
 export const analyzeJobFit = async (
-    job: Job,
-    userBio: string
-  ): Promise<string> => {
-    try {
-      const prompt = `
+  job: Job,
+  userBio: string
+): Promise<string> => {
+  try {
+    const prompt = `
         Analyze the fit for this candidate for the following job:
         
         Job: ${job.title}
@@ -55,14 +57,17 @@ export const analyzeJobFit = async (
         
         Provide a 2-sentence summary of why this candidate is a good fit, and 1 sentence on what they might be missing.
       `;
-  
-      const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: prompt,
-      });
-  
-      return response.text || "Could not analyze fit.";
-    } catch (error) {
+
+    const { data, error } = await supabase.functions.invoke('generate-content', {
+      body: { prompt },
+    });
+
+    if (error) {
       return "Analysis unavailable.";
     }
-  };
+
+    return data.text || "Could not analyze fit.";
+  } catch (error) {
+    return "Analysis unavailable.";
+  }
+};
