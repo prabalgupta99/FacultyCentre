@@ -1,503 +1,694 @@
-
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>FacultyFinder India</title>
-    
-    <!-- Google Fonts: Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        darkMode: ['class', '[data-theme="dark"]'],
-        theme: {
-          extend: {
-            colors: {
-              // Semantic Colors (Linked to CSS Variables)
-              'colors_background_bg_primary': 'var(--colors_background_bg_primary)',
-              'colors_background_bg_secondary': 'var(--colors_background_bg_secondary)',
-              'colors_background_bg_tertiary': 'var(--colors_background_bg_tertiary)',
-              'colors_background_bg_brand_solid': 'var(--colors_background_bg_brand_solid)',
-              'colors_background_bg_brand_solid_subtle': 'var(--colors_background_bg_brand_solid_subtle)',
-              'colors_background_bg_brand_section': 'var(--colors_background_bg_brand_section)',
-              'colors_background_bg_active': 'var(--colors_background_bg_active)',
-              'colors_background_bg_overlay': 'var(--colors_background_bg_overlay)',
-              'colors_background_bg_brand_secondary': 'var(--colors_background_bg_brand_secondary)',
-              
-              'colors_text_text_primary_900_': 'var(--colors_text_text_primary_900_)',
-              'colors_text_text_secondary_700_': 'var(--colors_text_text_secondary_700_)',
-              'colors_text_text_tertiary_600_': 'var(--colors_text_text_tertiary_600_)',
-              'colors_text_text_white': 'var(--colors_text_text_white)',
-              'colors_text_text_brand_primary_900_': 'var(--colors_text_text_brand_primary_900_)',
-              'colors_text_text_error_primary_600_': 'var(--colors_text_text_error_primary_600_)',
-              'colors_text_text_success_primary_600_': 'var(--colors_text_text_success_primary_600_)',
-              
-              'colors_border_border_primary': 'var(--colors_border_border_primary)',
-              'colors_border_border_secondary': 'var(--colors_border_border_secondary)',
-              'colors_border_border_brand_solid': 'var(--colors_border_border_brand_solid)',
-              
-              // Button specific
-              'component_colors_components_buttons_primary_button_primary_bg': 'var(--component_colors_components_buttons_primary_button_primary_bg)',
-              'component_colors_components_buttons_primary_button_primary_fg': 'var(--component_colors_components_buttons_primary_button_primary_fg)',
-              'component_colors_components_buttons_secondary_button_secondary_bg': 'var(--component_colors_components_buttons_secondary_button_secondary_bg)',
-              'component_colors_components_buttons_secondary_button_secondary_fg': 'var(--component_colors_components_buttons_secondary_button_secondary_fg)',
-              'component_colors_components_buttons_secondary_button_secondary_border': 'var(--component_colors_components_buttons_secondary_button_secondary_border)',
 
-              // States
-              'colors_background_bg_success_primary': 'var(--colors_background_bg_success_primary)',
-              'colors_background_bg_error_primary': 'var(--colors_background_bg_error_primary)',
-            },
-            spacing: {
-              'spacing_0_0px_': 'var(--spacing_0_0px_)',
-              'spacing_xxs': 'var(--spacing_xxs)',
-              'spacing_xs': 'var(--spacing_xs)',
-              'spacing_sm': 'var(--spacing_sm)',
-              'spacing_md': 'var(--spacing_md)',
-              'spacing_lg': 'var(--spacing_lg)',
-              'spacing_xl': 'var(--spacing_xl)',
-              'spacing_2xl': 'var(--spacing_2xl)',
-              'spacing_3xl': 'var(--spacing_3xl)',
-              'spacing_4xl': 'var(--spacing_4xl)',
-              'spacing_5xl': 'var(--spacing_5xl)',
-              'spacing_6xl': 'var(--spacing_6xl)',
-              'spacing_7xl': 'var(--spacing_7xl)',
-              'spacing_8xl': 'var(--spacing_8xl)',
-              'spacing_9xl': 'var(--spacing_9xl)',
-              'spacing_10xl': 'var(--spacing_10xl)',
-              'spacing_11xl': 'var(--spacing_11xl)',
-              'spacing_14': 'var(--spacing_14_56px_)',
-            },
-            width: {
-              'width_xxs': 'var(--width_xxs)',
-              'width_xs': 'var(--width_xs)',
-              'width_sm': 'var(--width_sm)',
-              'width_md': 'var(--width_md)',
-              'width_lg': 'var(--width_lg)',
-              'width_xl': 'var(--width_xl)',
-              'width_2xl': 'var(--width_2xl)',
-            },
-            maxWidth: {
-              'width_xxs': 'var(--width_xxs)',
-              'width_xs': 'var(--width_xs)',
-              'width_sm': 'var(--width_sm)',
-              'width_md': 'var(--width_md)',
-              'width_lg': 'var(--width_lg)',
-              'width_xl': 'var(--width_xl)',
-              'width_2xl': 'var(--width_2xl)',
-            },
-            borderRadius: {
-              'radius_sm': 'var(--radius_sm)',
-              'radius_md': 'var(--radius_md)',
-              'radius_lg': 'var(--radius_lg)',
-              'radius_xl': 'var(--radius_xl)',
-              'radius_full': 'var(--radius_full)',
-            },
-            boxShadow: {
-               'shadow_soft': 'var(--shadow_soft)',
-               'shadow_card': 'var(--shadow_card)',
-               'shadow_floating': 'var(--shadow_floating)',
-            }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>FacultyFinder India</title>
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: ['class', '[data-theme="dark"]'],
+      theme: {
+        extend: {
+          colors: {
+            // Semantic Colors (Linked to CSS Variables)
+            'colors_background_bg_primary': 'var(--colors_background_bg_primary)',
+            'colors_background_bg_secondary': 'var(--colors_background_bg_secondary)',
+            'colors_background_bg_tertiary': 'var(--colors_background_bg_tertiary)',
+            'colors_background_bg_brand_solid': 'var(--colors_background_bg_brand_solid)',
+            'colors_background_bg_brand_solid_subtle': 'var(--colors_background_bg_brand_solid_subtle)',
+            'colors_background_bg_brand_section': 'var(--colors_background_bg_brand_section)',
+            'colors_background_bg_active': 'var(--colors_background_bg_active)',
+            'colors_background_bg_overlay': 'var(--colors_background_bg_overlay)',
+            'colors_background_bg_brand_secondary': 'var(--colors_background_bg_brand_secondary)',
+
+            'colors_text_text_primary_900_': 'var(--colors_text_text_primary_900_)',
+            'colors_text_text_secondary_700_': 'var(--colors_text_text_secondary_700_)',
+            'colors_text_text_tertiary_600_': 'var(--colors_text_text_tertiary_600_)',
+            'colors_text_text_white': 'var(--colors_text_text_white)',
+            'colors_text_text_brand_primary_900_': 'var(--colors_text_text_brand_primary_900_)',
+            'colors_text_text_error_primary_600_': 'var(--colors_text_text_error_primary_600_)',
+            'colors_text_text_success_primary_600_': 'var(--colors_text_text_success_primary_600_)',
+
+            'colors_border_border_primary': 'var(--colors_border_border_primary)',
+            'colors_border_border_secondary': 'var(--colors_border_border_secondary)',
+            'colors_border_border_brand_solid': 'var(--colors_border_border_brand_solid)',
+
+            // Button specific
+            'component_colors_components_buttons_primary_button_primary_bg': 'var(--component_colors_components_buttons_primary_button_primary_bg)',
+            'component_colors_components_buttons_primary_button_primary_fg': 'var(--component_colors_components_buttons_primary_button_primary_fg)',
+            'component_colors_components_buttons_secondary_button_secondary_bg': 'var(--component_colors_components_buttons_secondary_button_secondary_bg)',
+            'component_colors_components_buttons_secondary_button_secondary_fg': 'var(--component_colors_components_buttons_secondary_button_secondary_fg)',
+            'component_colors_components_buttons_secondary_button_secondary_border': 'var(--component_colors_components_buttons_secondary_button_secondary_border)',
+
+            // States
+            'colors_background_bg_success_primary': 'var(--colors_background_bg_success_primary)',
+            'colors_background_bg_error_primary': 'var(--colors_background_bg_error_primary)',
+          },
+          spacing: {
+            'spacing_0_0px_': 'var(--spacing_0_0px_)',
+            'spacing_xxs': 'var(--spacing_xxs)',
+            'spacing_xs': 'var(--spacing_xs)',
+            'spacing_sm': 'var(--spacing_sm)',
+            'spacing_md': 'var(--spacing_md)',
+            'spacing_lg': 'var(--spacing_lg)',
+            'spacing_xl': 'var(--spacing_xl)',
+            'spacing_2xl': 'var(--spacing_2xl)',
+            'spacing_3xl': 'var(--spacing_3xl)',
+            'spacing_4xl': 'var(--spacing_4xl)',
+            'spacing_5xl': 'var(--spacing_5xl)',
+            'spacing_6xl': 'var(--spacing_6xl)',
+            'spacing_7xl': 'var(--spacing_7xl)',
+            'spacing_8xl': 'var(--spacing_8xl)',
+            'spacing_9xl': 'var(--spacing_9xl)',
+            'spacing_10xl': 'var(--spacing_10xl)',
+            'spacing_11xl': 'var(--spacing_11xl)',
+            'spacing_14': 'var(--spacing_14_56px_)',
+          },
+          width: {
+            'width_xxs': 'var(--width_xxs)',
+            'width_xs': 'var(--width_xs)',
+            'width_sm': 'var(--width_sm)',
+            'width_md': 'var(--width_md)',
+            'width_lg': 'var(--width_lg)',
+            'width_xl': 'var(--width_xl)',
+            'width_2xl': 'var(--width_2xl)',
+          },
+          maxWidth: {
+            'width_xxs': 'var(--width_xxs)',
+            'width_xs': 'var(--width_xs)',
+            'width_sm': 'var(--width_sm)',
+            'width_md': 'var(--width_md)',
+            'width_lg': 'var(--width_lg)',
+            'width_xl': 'var(--width_xl)',
+            'width_2xl': 'var(--width_2xl)',
+          },
+          borderRadius: {
+            'radius_sm': 'var(--radius_sm)',
+            'radius_md': 'var(--radius_md)',
+            'radius_lg': 'var(--radius_lg)',
+            'radius_xl': 'var(--radius_xl)',
+            'radius_full': 'var(--radius_full)',
+          },
+          boxShadow: {
+            'shadow_soft': 'var(--shadow_soft)',
+            'shadow_card': 'var(--shadow_card)',
+            'shadow_floating': 'var(--shadow_floating)',
           }
         }
       }
-    </script>
-    
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-    <!-- MarkerCluster CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
-    
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-    <!-- MarkerCluster JS -->
-    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    }
+  </script>
 
-    <style id="design-tokens">
-      :root {
-        /* ================================================================= */
-        /* 1. PRIMITIVE LAYER (Raw Values from JSON `primitives.style`)      */
-        /* ================================================================= */
-        
-        /* Base Colors */
-        --colors_base_white: #ffffffff;
-        --colors_base_black: #000000ff;
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <!-- MarkerCluster CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
 
-        /* Grays (Light Mode Primitives) */
-        --colors_gray_light_mode_25: #fcfcfdff;
-        --colors_gray_light_mode_50: #f9fafbff;
-        --colors_gray_light_mode_100: #f2f4f7ff;
-        --colors_gray_light_mode_200: #eaecf0ff;
-        --colors_gray_light_mode_300: #d0d5ddff;
-        --colors_gray_light_mode_400: #98a1b2ff;
-        --colors_gray_light_mode_500: #667085ff;
-        --colors_gray_light_mode_600: #475467ff;
-        --colors_gray_light_mode_700: #344054ff;
-        --colors_gray_light_mode_800: #18212fff;
-        --colors_gray_light_mode_900: #101828ff;
-        --colors_gray_light_mode_950: #0c111dff;
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- MarkerCluster JS -->
+  <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
 
-        /* Grays (Dark Mode Primitives) */
-        --colors_gray_dark_mode_25: #fafafaff;
-        --colors_gray_dark_mode_50: #f5f5f6ff;
-        --colors_gray_dark_mode_100: #f0f1f1ff;
-        --colors_gray_dark_mode_200: #ececedff;
-        --colors_gray_dark_mode_300: #cecfd2ff;
-        --colors_gray_dark_mode_400: #94969cff;
-        --colors_gray_dark_mode_500: #85888eff;
-        --colors_gray_dark_mode_600: #61646cff;
-        --colors_gray_dark_mode_700: #333741ff;
-        --colors_gray_dark_mode_800: #1f242fff;
-        --colors_gray_dark_mode_900: #161b26ff;
-        --colors_gray_dark_mode_950: #0c111dff;
+  <style id="design-tokens">
+    :root {
+      /* ================================================================= */
+      /* 1. PRIMITIVE LAYER (Raw Values from JSON `primitives.style`)      */
+      /* ================================================================= */
 
-        /* Brand Colors */
-        --colors_brand_25: #fcfaffff;
-        --colors_brand_50: #f9f5ffff;
-        --colors_brand_100: #f4ebffff;
-        --colors_brand_200: #e9d7feff;
-        --colors_brand_300: #d6bbfbff;
-        --colors_brand_400: #b692f6ff;
-        --colors_brand_500: #9d76edff;
-        --colors_brand_600: #7e56d8ff;
-        --colors_brand_700: #6840c6ff;
-        --colors_brand_800: #52379eff;
-        --colors_brand_900: #422f7dff;
-        --colors_brand_950: #2b1b5eff;
+      /* Base Colors */
+      --colors_base_white: #ffffffff;
+      --colors_base_black: #000000ff;
 
-        /* Error Colors */
-        --colors_error_25: #fefafaff;
-        --colors_error_50: #fef2f1ff;
-        --colors_error_100: #fee3e1ff;
-        --colors_error_200: #fecdc9ff;
-        --colors_error_300: #fca19bff;
-        --colors_error_400: #f97066ff;
-        --colors_error_500: #f04437ff;
-        --colors_error_600: #d92c20ff;
-        --colors_error_700: #b32218ff;
-        --colors_error_800: #901f17ff;
-        --colors_error_900: #7a2619ff;
-        --colors_error_950: #54150cff;
+      /* Grays (Light Mode Primitives) */
+      --colors_gray_light_mode_25: #fcfcfdff;
+      --colors_gray_light_mode_50: #f9fafbff;
+      --colors_gray_light_mode_100: #f2f4f7ff;
+      --colors_gray_light_mode_200: #eaecf0ff;
+      --colors_gray_light_mode_300: #d0d5ddff;
+      --colors_gray_light_mode_400: #98a1b2ff;
+      --colors_gray_light_mode_500: #667085ff;
+      --colors_gray_light_mode_600: #475467ff;
+      --colors_gray_light_mode_700: #344054ff;
+      --colors_gray_light_mode_800: #18212fff;
+      --colors_gray_light_mode_900: #101828ff;
+      --colors_gray_light_mode_950: #0c111dff;
 
-        /* Warning Colors */
-        --colors_warning_50: #fff9ebff;
-        --colors_warning_100: #feefc6ff;
-        --colors_warning_500: #f78f08ff;
-        --colors_warning_600: #db6803ff;
+      /* Grays (Dark Mode Primitives) */
+      --colors_gray_dark_mode_25: #fafafaff;
+      --colors_gray_dark_mode_50: #f5f5f6ff;
+      --colors_gray_dark_mode_100: #f0f1f1ff;
+      --colors_gray_dark_mode_200: #ececedff;
+      --colors_gray_dark_mode_300: #cecfd2ff;
+      --colors_gray_dark_mode_400: #94969cff;
+      --colors_gray_dark_mode_500: #85888eff;
+      --colors_gray_dark_mode_600: #61646cff;
+      --colors_gray_dark_mode_700: #333741ff;
+      --colors_gray_dark_mode_800: #1f242fff;
+      --colors_gray_dark_mode_900: #161b26ff;
+      --colors_gray_dark_mode_950: #0c111dff;
 
-        /* Success Colors */
-        --colors_success_25: #f5fdf9ff;
-        --colors_success_50: #ecfcf2ff;
-        --colors_success_600: #069454ff;
-        --colors_success_500: #17b169ff;
+      /* Brand Colors */
+      --colors_brand_25: #fcfaffff;
+      --colors_brand_50: #f9f5ffff;
+      --colors_brand_100: #f4ebffff;
+      --colors_brand_200: #e9d7feff;
+      --colors_brand_300: #d6bbfbff;
+      --colors_brand_400: #b692f6ff;
+      --colors_brand_500: #9d76edff;
+      --colors_brand_600: #7e56d8ff;
+      --colors_brand_700: #6840c6ff;
+      --colors_brand_800: #52379eff;
+      --colors_brand_900: #422f7dff;
+      --colors_brand_950: #2b1b5eff;
 
-        /* Spacing Primitives (Defined in JSON primitives.style) */
-        --spacing_0_0px_: 0px;
-        --spacing_0_5_2px_: 2px;
-        --spacing_1_4px_: 4px;
-        --spacing_1_5_6px_: 6px;
-        --spacing_2_8px_: 8px;
-        --spacing_3_12px_: 12px;
-        --spacing_4_16px_: 16px;
-        --spacing_5_20px_: 20px;
-        --spacing_6_24px_: 24px;
-        --spacing_8_32px_: 32px;
-        --spacing_10_40px_: 40px;
-        --spacing_12_48px_: 48px;
-        --spacing_14_56px_: 56px;
-        --spacing_16_64px_: 64px;
-        --spacing_20_80px_: 80px;
-        --spacing_24_96px_: 96px;
-        --spacing_32_128px_: 128px;
-        --spacing_40_160px_: 160px;
-        
-        /* Width Primitives */
-        --spacing_80_320px_: 320px;
-        --spacing_96_384px_: 384px;
-        --spacing_120_480px_: 480px;
-        --spacing_140_560px_: 560px;
-        --spacing_180_720px_: 720px;
-        --spacing_256_1024px_: 1024px;
-        --spacing_320_1280px_: 1280px;
+      /* Error Colors */
+      --colors_error_25: #fefafaff;
+      --colors_error_50: #fef2f1ff;
+      --colors_error_100: #fee3e1ff;
+      --colors_error_200: #fecdc9ff;
+      --colors_error_300: #fca19bff;
+      --colors_error_400: #f97066ff;
+      --colors_error_500: #f04437ff;
+      --colors_error_600: #d92c20ff;
+      --colors_error_700: #b32218ff;
+      --colors_error_800: #901f17ff;
+      --colors_error_900: #7a2619ff;
+      --colors_error_950: #54150cff;
 
-        /* ================================================================= */
-        /* 2. THEME VALUES (Radius & Spacing mapped to Primitives or raw)    */
-        /* ================================================================= */
-        
-        /* Radius (from 2_radius) */
-        --radius_sm: 6px;
-        --radius_md: 8px;
-        --radius_lg: 10px;
-        --radius_xl: 12px;
-        --radius_full: 9999px;
+      /* Warning Colors */
+      --colors_warning_50: #fff9ebff;
+      --colors_warning_100: #feefc6ff;
+      --colors_warning_500: #f78f08ff;
+      --colors_warning_600: #db6803ff;
 
-        /* Spacing Semantic (from 3_spacing, mapped to Primitives) */
-        --spacing_xxs: var(--spacing_0_5_2px_);
-        --spacing_xs: var(--spacing_1_4px_);
-        --spacing_sm: var(--spacing_1_5_6px_);
-        --spacing_md: var(--spacing_2_8px_);
-        --spacing_lg: var(--spacing_3_12px_);
-        --spacing_xl: var(--spacing_4_16px_);
-        --spacing_2xl: var(--spacing_5_20px_);
-        --spacing_3xl: var(--spacing_6_24px_);
-        --spacing_4xl: var(--spacing_8_32px_);
-        --spacing_5xl: var(--spacing_10_40px_);
-        --spacing_6xl: var(--spacing_12_48px_);
-        
-        /* Extended Semantic Spacing */
-        --spacing_7xl: var(--spacing_16_64px_);
-        --spacing_8xl: var(--spacing_20_80px_);
-        --spacing_9xl: var(--spacing_24_96px_);
-        --spacing_10xl: var(--spacing_32_128px_);
-        --spacing_11xl: var(--spacing_40_160px_);
-        
-        /* Widths (from 4_widths) */
-        --width_xxs: var(--spacing_80_320px_);
-        --width_xs: var(--spacing_96_384px_);
-        --width_sm: var(--spacing_120_480px_);
-        --width_md: var(--spacing_140_560px_);
-        --width_lg: var(--spacing_16_64px_); 
-        --width_xl: var(--spacing_180_720px_);
-        --width_2xl: var(--spacing_256_1024px_);
+      /* Success Colors */
+      --colors_success_25: #f5fdf9ff;
+      --colors_success_50: #ecfcf2ff;
+      --colors_success_600: #069454ff;
+      --colors_success_500: #17b169ff;
 
-        /* Elevation / Shadows */
-        --shadow_soft: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-        --shadow_card: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
-        --shadow_floating: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      /* Spacing Primitives (Defined in JSON primitives.style) */
+      --spacing_0_0px_: 0px;
+      --spacing_0_5_2px_: 2px;
+      --spacing_1_4px_: 4px;
+      --spacing_1_5_6px_: 6px;
+      --spacing_2_8px_: 8px;
+      --spacing_3_12px_: 12px;
+      --spacing_4_16px_: 16px;
+      --spacing_5_20px_: 20px;
+      --spacing_6_24px_: 24px;
+      --spacing_8_32px_: 32px;
+      --spacing_10_40px_: 40px;
+      --spacing_12_48px_: 48px;
+      --spacing_14_56px_: 56px;
+      --spacing_16_64px_: 64px;
+      --spacing_20_80px_: 80px;
+      --spacing_24_96px_: 96px;
+      --spacing_32_128px_: 128px;
+      --spacing_40_160px_: 160px;
 
-        /* ================================================================= */
-        /* 3. SEMANTIC LAYER - LIGHT MODE (Mapping Semantic -> Primitive)    */
-        /* ================================================================= */
+      /* Width Primitives */
+      --spacing_80_320px_: 320px;
+      --spacing_96_384px_: 384px;
+      --spacing_120_480px_: 480px;
+      --spacing_140_560px_: 560px;
+      --spacing_180_720px_: 720px;
+      --spacing_256_1024px_: 1024px;
+      --spacing_320_1280px_: 1280px;
 
-        /* Backgrounds */
-        --colors_background_bg_primary: var(--colors_base_white);
-        --colors_background_bg_secondary: var(--colors_gray_light_mode_50);
-        --colors_background_bg_tertiary: var(--colors_gray_light_mode_100);
-        --colors_background_bg_brand_solid: var(--colors_brand_600);
-        --colors_background_bg_brand_section: var(--colors_brand_800);
-        --colors_background_bg_active: var(--colors_gray_light_mode_50);
-        --colors_background_bg_overlay: var(--colors_gray_light_mode_950);
-        --colors_background_bg_brand_secondary: var(--colors_brand_100);
-        --colors_background_bg_brand_solid_subtle: var(--colors_brand_100);
+      /* ================================================================= */
+      /* 2. THEME VALUES (Radius & Spacing mapped to Primitives or raw)    */
+      /* ================================================================= */
 
-        /* Text */
-        --colors_text_text_primary_900_: var(--colors_gray_light_mode_900);
-        --colors_text_text_secondary_700_: var(--colors_gray_light_mode_700);
-        --colors_text_text_tertiary_600_: var(--colors_gray_light_mode_600);
-        --colors_text_text_white: var(--colors_base_white);
-        --colors_text_text_brand_primary_900_: var(--colors_brand_900);
-        --colors_text_text_error_primary_600_: var(--colors_error_600);
-        --colors_text_text_success_primary_600_: var(--colors_success_600);
+      /* Radius (from 2_radius) */
+      --radius_sm: 6px;
+      --radius_md: 8px;
+      --radius_lg: 10px;
+      --radius_xl: 12px;
+      --radius_full: 9999px;
 
-        /* Borders */
-        --colors_border_border_primary: var(--colors_gray_light_mode_300);
-        --colors_border_border_secondary: var(--colors_gray_light_mode_200);
-        --colors_border_border_brand_solid: var(--colors_brand_600);
+      /* Spacing Semantic (from 3_spacing, mapped to Primitives) */
+      --spacing_xxs: var(--spacing_0_5_2px_);
+      --spacing_xs: var(--spacing_1_4px_);
+      --spacing_sm: var(--spacing_1_5_6px_);
+      --spacing_md: var(--spacing_2_8px_);
+      --spacing_lg: var(--spacing_3_12px_);
+      --spacing_xl: var(--spacing_4_16px_);
+      --spacing_2xl: var(--spacing_5_20px_);
+      --spacing_3xl: var(--spacing_6_24px_);
+      --spacing_4xl: var(--spacing_8_32px_);
+      --spacing_5xl: var(--spacing_10_40px_);
+      --spacing_6xl: var(--spacing_12_48px_);
 
-        /* Components */
-        --component_colors_components_buttons_primary_button_primary_bg: var(--colors_brand_600);
-        --component_colors_components_buttons_primary_button_primary_fg: var(--colors_base_white);
-        --component_colors_components_buttons_secondary_button_secondary_bg: var(--colors_base_white);
-        --component_colors_components_buttons_secondary_button_secondary_fg: var(--colors_gray_light_mode_700);
-        --component_colors_components_buttons_secondary_button_secondary_border: var(--colors_gray_light_mode_300);
+      /* Extended Semantic Spacing */
+      --spacing_7xl: var(--spacing_16_64px_);
+      --spacing_8xl: var(--spacing_20_80px_);
+      --spacing_9xl: var(--spacing_24_96px_);
+      --spacing_10xl: var(--spacing_32_128px_);
+      --spacing_11xl: var(--spacing_40_160px_);
 
-        /* Feedback Backgrounds */
-        --colors_background_bg_success_primary: var(--colors_success_50);
-        --colors_background_bg_error_primary: var(--colors_error_50);
+      /* Widths (from 4_widths) */
+      --width_xxs: var(--spacing_80_320px_);
+      --width_xs: var(--spacing_96_384px_);
+      --width_sm: var(--spacing_120_480px_);
+      --width_md: var(--spacing_140_560px_);
+      --width_lg: var(--spacing_16_64px_);
+      --width_xl: var(--spacing_180_720px_);
+      --width_2xl: var(--spacing_256_1024px_);
 
-        /* Fonts */
-        --font-main: 'Inter', sans-serif;
-      }
+      /* Elevation / Shadows */
+      --shadow_soft: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+      --shadow_card: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+      --shadow_floating: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 
-      [data-theme='dark'] {
-        /* ================================================================= */
-        /* 4. SEMANTIC LAYER - DARK MODE (Mapping Semantic -> Primitive)     */
-        /* ================================================================= */
-        
-        /* Backgrounds */
-        --colors_background_bg_primary: var(--colors_gray_dark_mode_950);
-        --colors_background_bg_secondary: var(--colors_gray_dark_mode_900);
-        --colors_background_bg_tertiary: var(--colors_gray_dark_mode_800);
-        --colors_background_bg_brand_solid: var(--colors_brand_600);
-        --colors_background_bg_active: var(--colors_gray_dark_mode_800);
-        --colors_background_bg_overlay: var(--colors_gray_dark_mode_800);
-        --colors_background_bg_brand_secondary: var(--colors_brand_600); 
-        --colors_background_bg_brand_solid_subtle: var(--colors_brand_900);
+      /* ================================================================= */
+      /* 3. SEMANTIC LAYER - LIGHT MODE (Mapping Semantic -> Primitive)    */
+      /* ================================================================= */
 
-        /* Text */
-        --colors_text_text_primary_900_: var(--colors_gray_dark_mode_50);
-        --colors_text_text_secondary_700_: var(--colors_gray_dark_mode_300);
-        --colors_text_text_tertiary_600_: var(--colors_gray_dark_mode_400);
-        --colors_text_text_white: var(--colors_base_white);
-        --colors_text_text_brand_primary_900_: var(--colors_gray_dark_mode_50);
-        --colors_text_text_error_primary_600_: var(--colors_error_400);
-        --colors_text_text_success_primary_600_: var(--colors_success_600); 
+      /* Backgrounds */
+      --colors_background_bg_primary: var(--colors_base_white);
+      --colors_background_bg_secondary: var(--colors_gray_light_mode_50);
+      --colors_background_bg_tertiary: var(--colors_gray_light_mode_100);
+      --colors_background_bg_brand_solid: var(--colors_brand_600);
+      --colors_background_bg_brand_section: var(--colors_brand_800);
+      --colors_background_bg_active: var(--colors_gray_light_mode_50);
+      --colors_background_bg_overlay: var(--colors_gray_light_mode_950);
+      --colors_background_bg_brand_secondary: var(--colors_brand_100);
+      --colors_background_bg_brand_solid_subtle: var(--colors_brand_100);
 
-        /* Borders */
-        --colors_border_border_primary: var(--colors_gray_dark_mode_700);
-        --colors_border_border_secondary: var(--colors_gray_dark_mode_800);
-        --colors_border_border_brand_solid: var(--colors_brand_500);
+      /* Text */
+      --colors_text_text_primary_900_: var(--colors_gray_light_mode_900);
+      --colors_text_text_secondary_700_: var(--colors_gray_light_mode_700);
+      --colors_text_text_tertiary_600_: var(--colors_gray_light_mode_600);
+      --colors_text_text_white: var(--colors_base_white);
+      --colors_text_text_brand_primary_900_: var(--colors_brand_900);
+      --colors_text_text_error_primary_600_: var(--colors_error_600);
+      --colors_text_text_success_primary_600_: var(--colors_success_600);
 
-        /* Components */
-        --component_colors_components_buttons_primary_button_primary_bg: var(--colors_brand_600);
-        --component_colors_components_buttons_primary_button_primary_fg: var(--colors_base_white);
-        --component_colors_components_buttons_secondary_button_secondary_bg: var(--colors_gray_dark_mode_900);
-        --component_colors_components_buttons_secondary_button_secondary_fg: var(--colors_gray_dark_mode_300);
-        --component_colors_components_buttons_secondary_button_secondary_border: var(--colors_gray_dark_mode_700);
+      /* Borders */
+      --colors_border_border_primary: var(--colors_gray_light_mode_300);
+      --colors_border_border_secondary: var(--colors_gray_light_mode_200);
+      --colors_border_border_brand_solid: var(--colors_brand_600);
 
-        /* Feedback Backgrounds */
-        --colors_background_bg_success_primary: var(--colors_success_500);
-        --colors_background_bg_error_primary: var(--colors_error_500);
-      }
+      /* Components */
+      --component_colors_components_buttons_primary_button_primary_bg: var(--colors_brand_600);
+      --component_colors_components_buttons_primary_button_primary_fg: var(--colors_base_white);
+      --component_colors_components_buttons_secondary_button_secondary_bg: var(--colors_base_white);
+      --component_colors_components_buttons_secondary_button_secondary_fg: var(--colors_gray_light_mode_700);
+      --component_colors_components_buttons_secondary_button_secondary_border: var(--colors_gray_light_mode_300);
 
-      /* ========================================= */
-      /* 5. TYPOGRAPHY & GLOBAL STYLES             */
-      /* ========================================= */
-      
-      .text-display-2xl-regular { font-family: 'Inter', sans-serif; font-weight: 400; font-size: 60px; line-height: 1.1; letter-spacing: -0.02em; }
-      .text-display-2xl-medium { font-family: 'Inter', sans-serif; font-weight: 500; font-size: 60px; line-height: 1.1; letter-spacing: -0.02em; }
-      .text-display-2xl-semibold { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 60px; line-height: 1.1; letter-spacing: -0.02em; }
-      .text-display-2xl-bold { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 60px; line-height: 1.1; letter-spacing: -0.02em; }
+      /* Feedback Backgrounds */
+      --colors_background_bg_success_primary: var(--colors_success_50);
+      --colors_background_bg_error_primary: var(--colors_error_50);
 
-      .text-display-lg-bold { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 40px; line-height: 1.2; letter-spacing: -0.02em; }
+      /* Fonts */
+      --font-main: 'Inter', sans-serif;
+    }
 
-      .text-text-xl-regular { font-family: 'Inter', sans-serif; font-weight: 400; font-size: 20px; line-height: 1.4; }
-      .text-text-xl-medium { font-family: 'Inter', sans-serif; font-weight: 500; font-size: 20px; line-height: 1.4; }
-      .text-text-xl-semibold { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 20px; line-height: 1.4; }
-      .text-text-xl-bold { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 20px; line-height: 1.4; }
+    [data-theme='dark'] {
+      /* ================================================================= */
+      /* 4. SEMANTIC LAYER - DARK MODE (Mapping Semantic -> Primitive)     */
+      /* ================================================================= */
 
-      .text-text-lg-regular { font-family: 'Inter', sans-serif; font-weight: 400; font-size: 18px; line-height: 1.5; }
-      .text-text-lg-medium { font-family: 'Inter', sans-serif; font-weight: 500; font-size: 18px; line-height: 1.5; }
-      .text-text-lg-semibold { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 18px; line-height: 1.5; }
-      .text-text-lg-bold { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 18px; line-height: 1.5; }
+      /* Backgrounds */
+      --colors_background_bg_primary: var(--colors_gray_dark_mode_950);
+      --colors_background_bg_secondary: var(--colors_gray_dark_mode_900);
+      --colors_background_bg_tertiary: var(--colors_gray_dark_mode_800);
+      --colors_background_bg_brand_solid: var(--colors_brand_600);
+      --colors_background_bg_active: var(--colors_gray_dark_mode_800);
+      --colors_background_bg_overlay: var(--colors_gray_dark_mode_800);
+      --colors_background_bg_brand_secondary: var(--colors_brand_600);
+      --colors_background_bg_brand_solid_subtle: var(--colors_brand_900);
 
-      .text-text-md-regular { font-family: 'Inter', sans-serif; font-weight: 400; font-size: 16px; line-height: 1.5; }
-      .text-text-md-medium { font-family: 'Inter', sans-serif; font-weight: 500; font-size: 16px; line-height: 1.5; }
-      .text-text-md-semibold { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 16px; line-height: 1.5; }
-      .text-text-md-bold { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 16px; line-height: 1.5; }
+      /* Text */
+      --colors_text_text_primary_900_: var(--colors_gray_dark_mode_50);
+      --colors_text_text_secondary_700_: var(--colors_gray_dark_mode_300);
+      --colors_text_text_tertiary_600_: var(--colors_gray_dark_mode_400);
+      --colors_text_text_white: var(--colors_base_white);
+      --colors_text_text_brand_primary_900_: var(--colors_gray_dark_mode_50);
+      --colors_text_text_error_primary_600_: var(--colors_error_400);
+      --colors_text_text_success_primary_600_: var(--colors_success_600);
 
-      .text-text-sm-regular { font-family: 'Inter', sans-serif; font-weight: 400; font-size: 14px; line-height: 1.5; }
-      .text-text-sm-medium { font-family: 'Inter', sans-serif; font-weight: 500; font-size: 14px; line-height: 1.5; }
-      .text-text-sm-semibold { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 14px; line-height: 1.5; }
-      .text-text-sm-bold { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 14px; line-height: 1.5; }
+      /* Borders */
+      --colors_border_border_primary: var(--colors_gray_dark_mode_700);
+      --colors_border_border_secondary: var(--colors_gray_dark_mode_800);
+      --colors_border_border_brand_solid: var(--colors_brand_500);
 
-      .text-text-xs-regular { font-family: 'Inter', sans-serif; font-weight: 400; font-size: 12px; line-height: 1.5; }
-      .text-text-xs-medium { font-family: 'Inter', sans-serif; font-weight: 500; font-size: 12px; line-height: 1.5; }
-      .text-text-xs-semibold { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 12px; line-height: 1.5; }
-      .text-text-xs-bold { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 12px; line-height: 1.5; }
+      /* Components */
+      --component_colors_components_buttons_primary_button_primary_bg: var(--colors_brand_600);
+      --component_colors_components_buttons_primary_button_primary_fg: var(--colors_base_white);
+      --component_colors_components_buttons_secondary_button_secondary_bg: var(--colors_gray_dark_mode_900);
+      --component_colors_components_buttons_secondary_button_secondary_fg: var(--colors_gray_dark_mode_300);
+      --component_colors_components_buttons_secondary_button_secondary_border: var(--colors_gray_dark_mode_700);
 
-      body, div, button, input, select, textarea, span, h1, h2, h3, p, a {
-        transition-property: background-color, color, border-color, box-shadow, filter;
-        transition-duration: 300ms;
-        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-      }
+      /* Feedback Backgrounds */
+      --colors_background_bg_success_primary: var(--colors_success_500);
+      --colors_background_bg_error_primary: var(--colors_error_500);
+    }
 
-      body {
-        font-family: var(--font-main);
-        background-color: var(--colors_background_bg_primary);
-        color: var(--colors_text_text_primary_900_);
-        overscroll-behavior: none;
-        margin: 0;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-      }
+    /* ========================================= */
+    /* 5. TYPOGRAPHY & GLOBAL STYLES             */
+    /* ========================================= */
 
-      .no-scrollbar::-webkit-scrollbar { display: none; }
-      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .text-display-2xl-regular {
+      font-family: 'Inter', sans-serif;
+      font-weight: 400;
+      font-size: 60px;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
 
-      .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-      .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-      .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--colors_border_border_secondary); border-radius: var(--radius_full); }
-      .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--colors_text_text_tertiary_600_); }
+    .text-display-2xl-medium {
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      font-size: 60px;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
 
-      /* Map Dark Mode Overlay */
-      .map-night-overlay {
-        position: absolute;
-        inset: 0;
-        background: radial-gradient(circle at 50% 50%, rgba(253, 224, 71, 0.05), transparent 60%),
-                    linear-gradient(to bottom, rgba(15, 23, 42, 0.4), rgba(15, 23, 42, 0.2));
-        z-index: 400;
-        pointer-events: none;
-        opacity: var(--night-overlay-opacity);
-        transition: opacity 500ms ease-in-out;
-      }
-      
-      :root {
-        --night-overlay-opacity: 0;
-        --map-filter: none;
-      }
-      [data-theme='dark'] {
-        --night-overlay-opacity: 1;
-        --map-filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
-      }
+    .text-display-2xl-semibold {
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 60px;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
 
-      .leaflet-tile-pane {
-        filter: var(--map-filter);
-        transition: filter 500ms ease-in-out;
-      }
+    .text-display-2xl-bold {
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: 60px;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
 
-      .map-marker-pill {
-        background-color: var(--colors_background_bg_secondary);
-        border-radius: var(--radius_full);
-        padding: 4px 12px;
-        font-family: 'Inter', sans-serif;
-        font-weight: 600;
-        font-size: 13px; 
-        box-shadow: var(--shadow_card);
-        border: 1px solid var(--colors_border_border_primary);
-        transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
-        text-align: center;
-        white-space: nowrap;
-        color: var(--colors_text_text_primary_900_);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transform-origin: center bottom;
-      }
+    .text-display-lg-bold {
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: 40px;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+    }
 
-      .map-marker-pill:hover {
-        transform: scale(1.1) translateY(-2px);
-        z-index: 9999 !important;
-        box-shadow: var(--shadow_floating);
-        border-color: var(--colors_background_bg_brand_solid);
-      }
+    .text-text-xl-regular {
+      font-family: 'Inter', sans-serif;
+      font-weight: 400;
+      font-size: 20px;
+      line-height: 1.4;
+    }
 
-      .map-marker-pill.active {
-        background-color: var(--colors_background_bg_brand_solid_subtle);
-        color: var(--colors_text_text_brand_primary_900_);
-        transform: scale(1.15);
-        z-index: 10000 !important;
-        border-color: var(--colors_background_bg_brand_solid);
-      }
-      
-      .map-marker-pill.hiring {
-        border-color: var(--colors_text_text_success_primary_600_);
-        border-width: 1.5px;
-      }
+    .text-text-xl-medium {
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      font-size: 20px;
+      line-height: 1.4;
+    }
 
-      .custom-cluster {
-        background-color: var(--colors_background_bg_brand_solid);
-        color: var(--colors_text_text_white);
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 600;
-        font-size: 14px;
-        box-shadow: var(--shadow_card);
-        border: 2px solid var(--colors_background_bg_primary);
-        transition: transform 0.2s, background-color 0.3s, border-color 0.3s;
-      }
-    </style>
-    <script type="importmap">
+    .text-text-xl-semibold {
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 20px;
+      line-height: 1.4;
+    }
+
+    .text-text-xl-bold {
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: 20px;
+      line-height: 1.4;
+    }
+
+    .text-text-lg-regular {
+      font-family: 'Inter', sans-serif;
+      font-weight: 400;
+      font-size: 18px;
+      line-height: 1.5;
+    }
+
+    .text-text-lg-medium {
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      font-size: 18px;
+      line-height: 1.5;
+    }
+
+    .text-text-lg-semibold {
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 18px;
+      line-height: 1.5;
+    }
+
+    .text-text-lg-bold {
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: 18px;
+      line-height: 1.5;
+    }
+
+    .text-text-md-regular {
+      font-family: 'Inter', sans-serif;
+      font-weight: 400;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    .text-text-md-medium {
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    .text-text-md-semibold {
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    .text-text-md-bold {
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    .text-text-sm-regular {
+      font-family: 'Inter', sans-serif;
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .text-text-sm-medium {
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .text-text-sm-semibold {
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .text-text-sm-bold {
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .text-text-xs-regular {
+      font-family: 'Inter', sans-serif;
+      font-weight: 400;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .text-text-xs-medium {
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .text-text-xs-semibold {
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .text-text-xs-bold {
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    body,
+    div,
+    button,
+    input,
+    select,
+    textarea,
+    span,
+    h1,
+    h2,
+    h3,
+    p,
+    a {
+      transition-property: background-color, color, border-color, box-shadow, filter;
+      transition-duration: 300ms;
+      transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    body {
+      font-family: var(--font-main);
+      background-color: var(--colors_background_bg_primary);
+      color: var(--colors_text_text_primary_900_);
+      overscroll-behavior: none;
+      margin: 0;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: var(--colors_border_border_secondary);
+      border-radius: var(--radius_full);
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: var(--colors_text_text_tertiary_600_);
+    }
+
+    /* Map Dark Mode Overlay */
+    .map-night-overlay {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 50%, rgba(253, 224, 71, 0.05), transparent 60%),
+        linear-gradient(to bottom, rgba(15, 23, 42, 0.4), rgba(15, 23, 42, 0.2));
+      z-index: 400;
+      pointer-events: none;
+      opacity: var(--night-overlay-opacity);
+      transition: opacity 500ms ease-in-out;
+    }
+
+    :root {
+      --night-overlay-opacity: 0;
+      --map-filter: none;
+    }
+
+    [data-theme='dark'] {
+      --night-overlay-opacity: 1;
+      --map-filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+    }
+
+    .leaflet-tile-pane {
+      filter: var(--map-filter);
+      transition: filter 500ms ease-in-out;
+    }
+
+    .map-marker-pill {
+      background-color: var(--colors_background_bg_secondary);
+      border-radius: var(--radius_full);
+      padding: 4px 12px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 13px;
+      box-shadow: var(--shadow_card);
+      border: 1px solid var(--colors_border_border_primary);
+      transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+      text-align: center;
+      white-space: nowrap;
+      color: var(--colors_text_text_primary_900_);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform-origin: center bottom;
+    }
+
+    .map-marker-pill:hover {
+      transform: scale(1.1) translateY(-2px);
+      z-index: 9999 !important;
+      box-shadow: var(--shadow_floating);
+      border-color: var(--colors_background_bg_brand_solid);
+    }
+
+    .map-marker-pill.active {
+      background-color: var(--colors_background_bg_brand_solid_subtle);
+      color: var(--colors_text_text_brand_primary_900_);
+      transform: scale(1.15);
+      z-index: 10000 !important;
+      border-color: var(--colors_background_bg_brand_solid);
+    }
+
+    .map-marker-pill.hiring {
+      border-color: var(--colors_text_text_success_primary_600_);
+      border-width: 1.5px;
+    }
+
+    .custom-cluster {
+      background-color: var(--colors_background_bg_tertiary);
+      color: var(--colors_text_text_secondary_700_);
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      /* text-xs-medium */
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      font-size: 12px;
+      line-height: 1.5;
+
+      box-shadow: var(--shadow_card);
+      border: 2px solid var(--colors_background_bg_primary);
+      transition: transform 0.2s, background-color 0.2s, border-color 0.2s, color 0.2s;
+      cursor: pointer;
+    }
+
+    .custom-cluster:active {
+      background-color: var(--colors_background_bg_active);
+      transform: scale(0.95);
+    }
+  </style>
+  <script type="importmap">
     {
       "imports": {
         "react": "https://esm.sh/react@^19.2.3",
@@ -511,8 +702,10 @@
     </script>
   <link rel="stylesheet" href="/index.css">
 </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
-  </body>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+
 </html>

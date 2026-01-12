@@ -7,15 +7,14 @@ export const COLLEGES: College[] = [
     location: 'Bengaluru',
     state: 'Karnataka',
     coordinates: [12.9667, 77.5122],
-    type: CollegeType.NLU,
+    type: CollegeType.GOVT,
     ranking: 1,
     website: 'https://www.nls.ac.in',
     description: 'The premier national law university in India, located in Bengaluru.',
     logoUrl: 'https://picsum.photos/200',
-    contacts: [
-      { role: 'Registrar', name: 'Dr. N.S. Nigam', email: 'registrar@nls.ac.in' },
-      { role: 'Recruitment', name: 'HR Team', email: 'recruitment@nls.ac.in' }
-    ],
+    affiliatingUniversity: 'Autonomous',
+    careerPageUrl: 'https://www.nls.ac.in/careers',
+    isHiring: true,
     openings: [
       {
         id: 'j1',
@@ -45,14 +44,14 @@ export const COLLEGES: College[] = [
     location: 'Hyderabad',
     state: 'Telangana',
     coordinates: [17.5684, 78.5361],
-    type: CollegeType.NLU,
+    type: CollegeType.GOVT,
     ranking: 3,
     website: 'https://www.nalsar.ac.in',
     description: 'NALSAR is known for its liberal academic culture and strong student body.',
     logoUrl: 'https://picsum.photos/201',
-    contacts: [
-      { role: 'Vice Chancellor', name: 'Prof. Srikrishna', email: 'vc@nalsar.ac.in' }
-    ],
+    affiliatingUniversity: 'Autonomous',
+    careerPageUrl: 'https://www.nalsar.ac.in/careers',
+    isHiring: true,
     openings: [
       {
         id: 'j3',
@@ -77,10 +76,10 @@ export const COLLEGES: College[] = [
     website: 'https://www.symlaw.ac.in',
     description: 'A constituent of Symbiosis International University.',
     logoUrl: 'https://picsum.photos/202',
-    contacts: [
-      { role: 'HR Manager', name: 'Aditi Sharma', email: 'hr@symlaw.ac.in' }
-    ],
-    openings: [] 
+    affiliatingUniversity: 'Symbiosis International University',
+    careerPageUrl: 'https://www.symlaw.ac.in/careers',
+    isHiring: false,
+    openings: []
   },
   {
     id: '4',
@@ -88,12 +87,14 @@ export const COLLEGES: College[] = [
     location: 'New Delhi',
     state: 'Delhi',
     coordinates: [28.6006, 77.0264],
-    type: CollegeType.NLU,
+    type: CollegeType.GOVT,
     ranking: 2,
     website: 'https://nludelhi.ac.in',
     description: 'A premier law university in the capital city.',
     logoUrl: 'https://picsum.photos/203',
-    contacts: [],
+    affiliatingUniversity: 'Autonomous',
+    careerPageUrl: 'https://nludelhi.ac.in/careers',
+    isHiring: true,
     openings: [
       {
         id: 'j4',
@@ -118,11 +119,11 @@ export const COLLEGES: College[] = [
     website: 'https://jgls.edu.in',
     description: 'Indias number 1 ranked private law school.',
     logoUrl: 'https://picsum.photos/204',
-    contacts: [
-        { role: 'Dean of Hiring', name: 'Prof. Kumar', email: 'careers@jgu.edu.in'}
-    ],
+    affiliatingUniversity: 'O.P. Jindal Global University',
+    careerPageUrl: 'https://jgls.edu.in/careers',
+    isHiring: true,
     openings: [
-         {
+      {
         id: 'j5',
         title: 'Assistant Professor (General)',
         type: 'Assistant Professor',
@@ -140,12 +141,14 @@ export const COLLEGES: College[] = [
     location: 'Kolkata',
     state: 'West Bengal',
     coordinates: [22.5646, 88.4063],
-    type: CollegeType.NLU,
+    type: CollegeType.GOVT,
     ranking: 4,
     website: 'https://www.nujs.edu',
     description: 'Top tier NLU in the cultural capital of India.',
     logoUrl: 'https://picsum.photos/205',
-    contacts: [],
+    affiliatingUniversity: 'Autonomous',
+    careerPageUrl: 'https://www.nujs.edu/careers',
+    isHiring: false,
     openings: []
   }
 ];
