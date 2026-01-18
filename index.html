@@ -4,12 +4,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>FacultyFinder India</title>
+  <title>Faculty Centre</title>
 
   <!-- Google Fonts: Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=school,work" />
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -188,16 +190,32 @@
       --colors_error_950: #54150cff;
 
       /* Warning Colors */
-      --colors_warning_50: #fff9ebff;
-      --colors_warning_100: #feefc6ff;
-      --colors_warning_500: #f78f08ff;
-      --colors_warning_600: #db6803ff;
+      --colors_warning_25: #fffcf5ff;
+      --colors_warning_50: #fffaebff;
+      --colors_warning_100: #fef0c7ff;
+      --colors_warning_200: #fedf89ff;
+      --colors_warning_300: #fec84bff;
+      --colors_warning_400: #fdb022ff;
+      --colors_warning_500: #f79009ff;
+      --colors_warning_600: #dc6803ff;
+      --colors_warning_700: #b54708ff;
+      --colors_warning_800: #93370dff;
+      --colors_warning_900: #7a2e0eff;
+      --colors_warning_950: #4e1d09ff;
 
       /* Success Colors */
-      --colors_success_25: #f5fdf9ff;
-      --colors_success_50: #ecfcf2ff;
-      --colors_success_600: #069454ff;
-      --colors_success_500: #17b169ff;
+      --colors_success_25: #f6fef9ff;
+      --colors_success_50: #ecfdf3ff;
+      --colors_success_100: #dcfae6ff;
+      --colors_success_200: #a9efc5ff;
+      --colors_success_300: #75e0a7ff;
+      --colors_success_400: #47cd89ff;
+      --colors_success_500: #17b26aff;
+      --colors_success_600: #079455ff;
+      --colors_success_700: #067647ff;
+      --colors_success_800: #085d3aff;
+      --colors_success_900: #074d31ff;
+      --colors_success_950: #053321ff;
 
       /* Spacing Primitives (Defined in JSON primitives.style) */
       --spacing_0_0px_: 0px;
@@ -356,6 +374,14 @@
       /* Feedback Backgrounds */
       --colors_background_bg_success_primary: var(--colors_success_500);
       --colors_background_bg_error_primary: var(--colors_error_500);
+
+      /* Custom Map Overrides */
+      --colors_border_hiring: var(--colors_success_900);
+      --marker_text_shadow:
+        -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000,
+        1px 1px 0 #000;
     }
 
     /* ========================================= */
@@ -592,7 +618,25 @@
     }
 
     .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-      background: var(--colors_text_text_tertiary_600_);
+      background-color: var(--colors_border_border_brand_solid);
+    }
+
+    /* specific rule to ensure google font icon works */
+    .material-symbols-rounded {
+      font-family: 'Material Symbols Rounded';
+      font-weight: normal;
+      font-style: normal;
+      display: inline-block;
+      line-height: 1;
+      text-transform: none;
+      letter-spacing: normal;
+      word-wrap: normal;
+      white-space: nowrap;
+      direction: ltr;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      -moz-osx-font-smoothing: grayscale;
+      font-feature-settings: 'liga';
     }
 
     /* Map Dark Mode Overlay */
@@ -661,6 +705,18 @@
       border-width: 1.5px;
     }
 
+    /* Default (Light Mode) Styling */
+    :root {
+      --colors_border_hiring: var(--colors_success_200);
+      --marker_text_shadow:
+        -1px -1px 0 #fff,
+        1px -1px 0 #fff,
+        -1px 1px 0 #fff,
+        1px 1px 0 #fff;
+    }
+
+    /* ... existing classes ... */
+
     .custom-cluster {
       background-color: var(--colors_background_bg_tertiary);
       color: var(--colors_text_text_secondary_700_);
@@ -686,6 +742,33 @@
     .custom-cluster:active {
       background-color: var(--colors_background_bg_active);
       transform: scale(0.95);
+    }
+
+    /* Hiring Cluster: Conditional Border Color */
+    .custom-cluster.hiring-cluster {
+      border-color: var(--colors_border_hiring);
+    }
+
+    /* Marker Text Class for responsiveness */
+    .marker-text {
+      text-shadow: var(--marker_text_shadow);
+      color: var(--colors_text_text_secondary_700_);
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 13px;
+      line-height: 1.2;
+    }
+
+    @keyframes breathe {
+
+      0%,
+      100% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.2);
+      }
     }
   </style>
   <script type="importmap">

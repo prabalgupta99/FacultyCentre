@@ -1,68 +1,132 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { College, Job } from '../types';
-import { X, ChevronRight, Clock, MapPin, ExternalLink, Globe } from 'lucide-react';
+import { ChevronRight, Clock, MapPin, ExternalLink, Globe, ArrowLeft, AlertCircle } from 'lucide-react';
+import { checkIframeCompatibility } from '../services/collegeService';
 
 interface JobDetailsSheetProps {
     college: College;
+    isOpen: boolean;
     onClose: () => void;
 }
 
-const JobDetailsSheet: React.FC<JobDetailsSheetProps> = ({ college, onClose }) => {
+const JobDetailsSheet: React.FC<JobDetailsSheetProps> = ({ college, isOpen, onClose }) => {
     const [selectedJob, setSelectedJob] = useState<Job | null>(null);
-    const [activeTab, setActiveTab] = useState<'jobs' | 'website' | 'career' | 'about'>('jobs');
+    const [activeTab, setActiveTab] = useState<'career' | 'website' | 'jobs'>('career');
+    const [embeddableStatus, setEmbeddableStatus] = useState<Record<string, boolean>>({});
+    const [checkingStatus, setCheckingStatus] = useState<Record<string, boolean>>({});
+
+    const checkUrl = useCallback(async (url: string) => {
+        if (!url || embeddableStatus[url] !== undefined || checkingStatus[url]) return;
+
+        // Check local storage first
+        const cached = localStorage.getItem(`embed_check_v2_${url}`);
+        if (cached) {
+            setEmbeddableStatus(prev => ({ ...prev, [url]: cached === 'true' }));
+            return;
+        }
+
+        setCheckingStatus(prev => ({ ...prev, [url]: true }));
+        const isEmbeddable = await checkIframeCompatibility(url);
+        setEmbeddableStatus(prev => ({ ...prev, [url]: isEmbeddable }));
+        setCheckingStatus(prev => ({ ...prev, [url]: false }));
+        localStorage.setItem(`embed_check_v2_${url}`, String(isEmbeddable));
+    }, [embeddableStatus, checkingStatus]);
+
+    useEffect(() => {
+        if (activeTab === 'website' && college.website) checkUrl(college.website);
+        if (activeTab === 'career' && college.careerPageUrl) checkUrl(college.careerPageUrl);
+    }, [activeTab, college.website, college.careerPageUrl, checkUrl]);
+
+
+
+    const renderIframeWithHeader = (url: string | undefined, title: string, emptyMessage: string) => {
+        const isBlocked = url ? embeddableStatus[url] === false : false;
+
+        return (
+            <div className="h-[calc(100vh-200px)] flex flex-col gap-spacing_sm">
+                {url ? (
+                    <>
+                        <div className="flex items-center justify-between px-spacing_xs flex-shrink-0">
+                            <span className="text-text-xs-regular text-colors_text_text_tertiary_600_ truncate flex-1 mr-spacing_md font-mono bg-colors_background_bg_secondary px-spacing_sm py-spacing_xxs rounded-radius_sm">
+                                {url}
+                            </span>
+                            <div className="flex items-center gap-spacing_md">
+                                <a
+                                    href={url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-text-xs-medium text-colors_text_text_brand_primary_600_ hover:text-colors_text_text_brand_primary_800_ flex items-center gap-spacing_xs whitespace-nowrap transition-colors"
+                                >
+                                    Open in new tab <ExternalLink size={12} />
+                                </a>
+                            </div>
+                        </div>
+                        {isBlocked ? (
+                            <div className="w-full h-full flex flex-col items-center justify-center bg-colors_background_bg_secondary border border-colors_border_border_secondary rounded-radius_md p-spacing_xl text-center">
+                                <div className="w-16 h-16 rounded-full bg-colors_background_bg_tertiary flex items-center justify-center mb-spacing_lg text-colors_text_text_tertiary_600_">
+                                    <AlertCircle size={32} />
+                                </div>
+                                <h3 className="text-text-lg-bold text-colors_text_text_primary_900_ mb-spacing_sm">
+                                    Website cannot be embedded
+                                </h3>
+                                <p className="text-text-sm-regular text-colors_text_text_secondary_700_ mb-spacing_xl max-w-sm mx-auto">
+                                    This college's website has security settings (like X-Frame-Options) that prevent it from being displayed inside the Faculty Centre.
+                                </p>
+                                <a
+                                    href={url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="px-spacing_xl py-spacing_md rounded-radius_md text-text-sm-semibold bg-component_colors_components_buttons_primary_button_primary_bg text-component_colors_components_buttons_primary_button_primary_fg flex items-center gap-spacing_md hover:opacity-90 transition-opacity"
+                                >
+                                    Open Official Website <ExternalLink size={16} />
+                                </a>
+                            </div>
+                        ) : (
+                            <iframe
+                                key={url}
+                                src={url}
+                                className="w-full flex-1 border border-colors_border_border_secondary rounded-radius_md bg-white"
+                                title={title}
+                                sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+                            />
+                        )}
+                    </>
+                ) : (
+                    <div className="flex items-center justify-center h-full text-colors_text_text_tertiary_600_">
+                        <p>{emptyMessage}</p>
+                    </div>
+                )}
+            </div>
+        );
+    };
 
 
 
     return (
         <div
-            className={`fixed z-[600] flex flex-col shadow-shadow_floating transform transition-transform duration-300 border-colors_border_border_secondary bg-colors_background_bg_primary
-        bottom-0 left-0 right-0 w-full h-[85vh] rounded-t-lg border-t translate-y-0
-        md:top-0 md:bottom-0 md:left-auto md:right-0 md:w-width_sm md:h-full md:rounded-none md:border-l md:border-t-0
-        `}
-            style={{ animation: 'slideIn 0.3s cubic-bezier(0.32, 0.72, 0, 1)' }}
+            className={`fixed inset-0 z-[600] flex flex-col shadow-shadow_floating transform transition-transform duration-500 cubic-bezier(0.32, 0.72, 0, 1) bg-colors_background_bg_primary w-full h-full`}
+            style={{ transform: isOpen ? 'translateX(0)' : 'translateX(100%)' }}
         >
-            <style>{`
-        @keyframes slideIn {
-            from { transform: translateY(100%); }
-            to { transform: translateY(0); }
-        }
-        @media (min-width: 768px) {
-            @keyframes slideIn {
-                from { transform: translateX(100%); }
-                to { transform: translateX(0); }
-            }
-        }
-      `}</style>
 
-            <div className="px-spacing_3xl py-spacing_2xl border-b border-colors_border_border_secondary flex justify-between items-start sticky top-0 z-10 bg-colors_background_bg_primary">
-                <div className="pr-spacing_xl">
+            <div className="px-spacing_xl md:px-spacing_3xl py-spacing_lg md:py-spacing_2xl border-b border-colors_border_border_secondary flex items-start gap-spacing_lg sticky top-0 z-10 bg-colors_background_bg_primary">
+                <button
+                    onClick={onClose}
+                    className="mt-1 p-spacing_sm -ml-spacing_sm rounded-radius_full transition-colors text-colors_text_text_secondary_700_ hover:bg-colors_background_bg_secondary hover:text-colors_text_text_primary_900_"
+                    aria-label="Back"
+                >
+                    <ArrowLeft size={24} />
+                </button>
+                <div className="flex-1">
                     <h2 className="text-text-lg-bold leading-snug text-colors_text_text_primary_900_">{college.name}</h2>
                     <p className="text-text-sm-regular flex items-center gap-spacing_sm mt-spacing_xs text-colors_text_text_secondary_700_">
-                        <MapPin size={13} /> {college.location}
+                        <span className="material-symbols-rounded text-[18px]">school</span> Affiliated to {college.affiliatingUniversity}
                     </p>
                 </div>
-                <button onClick={onClose} className="p-spacing_md -mr-spacing_md rounded-radius_full transition-colors text-colors_text_text_secondary_700_ hover:bg-colors_background_bg_secondary">
-                    <X size={20} />
-                </button>
             </div>
 
             <div className="flex-1 overflow-y-auto no-scrollbar">
                 <div className="flex border-b border-colors_border_border_secondary px-spacing_3xl overflow-x-auto">
-                    <button
-                        onClick={() => setActiveTab('jobs')}
-                        className={`py-spacing_lg px-spacing_xl text-text-sm-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === 'jobs' ? 'border-colors_border_border_brand_solid text-colors_text_text_primary_900_' : 'border-transparent text-colors_text_text_tertiary_600_'
-                            }`}
-                    >
-                        Jobs {college.isHiring || college.openings.length > 0 ? `(${college.openings.length})` : ''}
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('website')}
-                        className={`py-spacing_lg px-spacing_xl text-text-sm-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === 'website' ? 'border-colors_border_border_brand_solid text-colors_text_text_primary_900_' : 'border-transparent text-colors_text_text_tertiary_600_'
-                            }`}
-                    >
-                        College Website
-                    </button>
                     <button
                         onClick={() => setActiveTab('career')}
                         className={`py-spacing_lg px-spacing_xl text-text-sm-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === 'career' ? 'border-colors_border_border_brand_solid text-colors_text_text_primary_900_' : 'border-transparent text-colors_text_text_tertiary_600_'
@@ -71,16 +135,25 @@ const JobDetailsSheet: React.FC<JobDetailsSheetProps> = ({ college, onClose }) =
                         Career Page
                     </button>
                     <button
-                        onClick={() => setActiveTab('about')}
-                        className={`py-spacing_lg px-spacing_xl text-text-sm-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === 'about' ? 'border-colors_border_border_brand_solid text-colors_text_text_primary_900_' : 'border-transparent text-colors_text_text_tertiary_600_'
+                        onClick={() => setActiveTab('website')}
+                        className={`py-spacing_lg px-spacing_xl text-text-sm-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === 'website' ? 'border-colors_border_border_brand_solid text-colors_text_text_primary_900_' : 'border-transparent text-colors_text_text_tertiary_600_'
                             }`}
                     >
-                        About College
+                        College Website
                     </button>
+                    {(college.isHiring || college.openings.length > 0) && (
+                        <button
+                            onClick={() => setActiveTab('jobs')}
+                            className={`py-spacing_lg px-spacing_xl text-text-sm-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === 'jobs' ? 'border-colors_border_border_brand_solid text-colors_text_text_primary_900_' : 'border-transparent text-colors_text_text_tertiary_600_'
+                                }`}
+                        >
+                            Jobs {college.openings.length > 0 ? `(${college.openings.length})` : ''}
+                        </button>
+                    )}
                 </div>
 
                 <div className="p-spacing_3xl">
-                    {activeTab === 'jobs' ? (
+                    <div className={activeTab === 'jobs' ? 'block' : 'hidden'}>
                         <div className="space-y-spacing_xl">
                             {college.openings.length === 0 ? (
                                 <div className="text-center py-spacing_6xl rounded-radius_md border border-dashed border-colors_border_border_secondary bg-colors_background_bg_secondary">
@@ -135,76 +208,13 @@ const JobDetailsSheet: React.FC<JobDetailsSheetProps> = ({ college, onClose }) =
                                 ))
                             )}
                         </div>
-                    ) : activeTab === 'website' ? (
-                        <div className="h-[calc(85vh-200px)] md:h-[calc(100vh-200px)]">
-                            {college.website ? (
-                                <iframe
-                                    src={college.website}
-                                    className="w-full h-full border-0 rounded-radius_md"
-                                    title="College Website"
-                                    sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
-                                />
-                            ) : (
-                                <div className="flex items-center justify-center h-full text-colors_text_text_tertiary_600_">
-                                    <p>Website URL not available</p>
-                                </div>
-                            )}
-                        </div>
-                    ) : activeTab === 'career' ? (
-                        <div className="h-[calc(85vh-200px)] md:h-[calc(100vh-200px)]">
-                            {college.careerPageUrl ? (
-                                <iframe
-                                    src={college.careerPageUrl}
-                                    className="w-full h-full border-0 rounded-radius_md"
-                                    title="Career Page"
-                                    sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
-                                />
-                            ) : (
-                                <div className="flex items-center justify-center h-full text-colors_text_text_tertiary_600_">
-                                    <p>Career page URL not available</p>
-                                </div>
-                            )}
-                        </div>
-                    ) : activeTab === 'about' ? (
-                        <div className="space-y-spacing_4xl">
-                            {college.affiliatingUniversity && (
-                                <div>
-                                    <h3 className="text-text-sm-semibold mb-spacing_lg text-colors_text_text_primary_900_">Affiliating University</h3>
-                                    <p className="text-text-sm-regular leading-relaxed text-colors_text_text_secondary_700_">{college.affiliatingUniversity}</p>
-                                </div>
-                            )}
-
-                            <div>
-                                <h3 className="text-text-sm-semibold mb-spacing_lg text-colors_text_text_primary_900_">About</h3>
-                                <p className="text-text-sm-regular leading-relaxed text-colors_text_text_secondary_700_">{college.description || 'No description available.'}</p>
-                            </div>
-
-                            <div className="flex gap-spacing_md">
-                                {college.website && (
-                                    <a
-                                        href={college.website}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="flex-1 flex items-center justify-center gap-spacing_md py-spacing_lg border border-colors_border_border_secondary rounded-radius_md text-text-sm-medium transition-colors hover:bg-colors_background_bg_secondary text-colors_text_text_primary_900_"
-                                    >
-                                        <Globe size={14} />
-                                        Website
-                                    </a>
-                                )}
-                                {college.careerPageUrl && (
-                                    <a
-                                        href={college.careerPageUrl}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="flex-1 flex items-center justify-center gap-spacing_md py-spacing_lg border border-colors_border_border_secondary rounded-radius_md text-text-sm-medium transition-colors hover:bg-colors_background_bg_secondary text-colors_text_text_primary_900_"
-                                    >
-                                        <ExternalLink size={14} />
-                                        Careers
-                                    </a>
-                                )}
-                            </div>
-                        </div>
-                    ) : null}
+                    </div>
+                    <div className={activeTab === 'website' ? 'block' : 'hidden'}>
+                        {renderIframeWithHeader(college.website, "College Website", "Website URL not available")}
+                    </div>
+                    <div className={activeTab === 'career' ? 'block' : 'hidden'}>
+                        {renderIframeWithHeader(college.careerPageUrl, "Career Page", "Career page URL not available")}
+                    </div>
                 </div>
             </div>
         </div>

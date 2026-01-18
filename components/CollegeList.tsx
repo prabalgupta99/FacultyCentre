@@ -57,24 +57,23 @@ const CollegeList: React.FC<CollegeListProps> = ({ colleges, selectedCollegeId, 
                 <div className="flex justify-between items-start mb-spacing_lg">
                   <div className="flex-1 pr-spacing_lg">
                     {/* 1. Name First */}
-                    <h3 className="text-text-md-semibold leading-tight mb-spacing_sm text-colors_text_text_primary_900_ group-hover:text-colors_text_text_brand_primary_900_ transition-colors">
+                    {/* 1. Name First */}
+                    <h3 className="text-text-lg-bold leading-tight mb-spacing_sm text-colors_text_text_primary_900_ group-hover:text-colors_text_text_brand_primary_900_ transition-colors">
                       {college.name}
                     </h3>
 
-                    {/* 2. Single Metadata Line: Location • Type • Rank */}
-                    <div className="flex items-center flex-wrap gap-x-spacing_md text-text-xs-regular text-colors_text_text_secondary_700_">
-                      <span className="truncate max-w-[200px]">{college.location}, {college.state}</span>
+                    {/* 2. Single Metadata Line: Type • Rank */}
+                    <div className="flex flex-col gap-spacing_xs mb-spacing_sm">
+                      <span className="flex items-start gap-spacing_xs w-full text-text-sm-regular text-colors_text_text_secondary_700_">
+                        <span className="material-symbols-rounded text-[20px] text-colors_text_text_secondary_700_ flex-shrink-0 mt-[2px]">school</span>
+                        <span className="text-wrap">Affiliated to {college.affiliatingUniversity}</span>
+                      </span>
 
-                      <span className="text-[6px] text-colors_text_text_tertiary_600_ mb-px">●</span>
-
-                      <span className="uppercase tracking-wide text-[10px] font-medium text-colors_text_text_tertiary_600_">{college.type}</span>
-
-                      {college.ranking && (
-                        <>
-                          <span className="text-[6px] text-colors_text_text_tertiary_600_ mb-px">●</span>
+                      <div className="flex items-center gap-x-spacing_md text-text-xs-regular text-colors_text_text_tertiary_600_ pl-[26px]">
+                        {college.ranking && (
                           <span className="text-colors_text_text_tertiary_600_">Rank #{college.ranking}</span>
-                        </>
-                      )}
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -115,7 +114,8 @@ const CollegeList: React.FC<CollegeListProps> = ({ colleges, selectedCollegeId, 
             </div>
           )}
         </>
-      )}
+      )
+      }
     </div>
   );
 };

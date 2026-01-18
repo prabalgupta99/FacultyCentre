@@ -8,13 +8,24 @@ interface MapProps {
     onSelectCollege: (id: string) => void;
     onClusterClick: (clusterColleges: College[]) => void;
     onMapReady?: (map: any) => void;
+    onBoundsChange?: (bounds: { minLat: number; maxLat: number; minLng: number; maxLng: number }) => void;
+    autoZoomOnSelect?: boolean;
 }
 
-const MapComponent: React.FC<MapProps> = ({ colleges, selectedCollegeId, onSelectCollege, onClusterClick, onMapReady }) => {
+const MapComponent: React.FC<MapProps> = ({
+    colleges,
+    selectedCollegeId,
+    onSelectCollege,
+    onClusterClick,
+    onMapReady,
+    onBoundsChange,
+    autoZoomOnSelect = true
+}) => {
     const mapContainerRef = useRef<HTMLDivElement>(null);
     const mapInstanceRef = useRef<any>(null);
     const clusterGroupRef = useRef<any>(null);
     const markersRef = useRef<{ [key: string]: any }>({});
+    const debounceRef = useRef<NodeJS.Timeout>();
 
     // Track zoom level to update marker content
     const [currentZoom, setCurrentZoom] = useState<number>(5);
@@ -40,7 +51,10 @@ const MapComponent: React.FC<MapProps> = ({ colleges, selectedCollegeId, onSelec
             minZoom: 3,
             maxBounds: bounds,
             maxBoundsViscosity: 1.0,
-            worldCopyJump: true
+            worldCopyJump: true,
+            wheelPxPerZoom: 30, // Faster zooming (default 60)
+            zoomDelta: 1,
+            zoomSnap: 0.5
         }).setView([21.7679, 78.8718], 5); // Center of India
 
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
@@ -49,6 +63,24 @@ const MapComponent: React.FC<MapProps> = ({ colleges, selectedCollegeId, onSelec
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
             noWrap: false
         }).addTo(map);
+
+        // Map Move/Zoom Listener (Debounced)
+        const handleMapMove = () => {
+            if (debounceRef.current) clearTimeout(debounceRef.current);
+            debounceRef.current = setTimeout(() => {
+                if (onBoundsChange) {
+                    const bounds = map.getBounds();
+                    onBoundsChange({
+                        minLat: bounds.getSouth(),
+                        maxLat: bounds.getNorth(),
+                        minLng: bounds.getWest(),
+                        maxLng: bounds.getEast()
+                    });
+                }
+            }, 500); // Debounce 500ms
+        };
+
+        map.on('moveend', handleMapMove);
 
         // Zoom listener
         map.on('zoomend', () => {
@@ -70,8 +102,27 @@ const MapComponent: React.FC<MapProps> = ({ colleges, selectedCollegeId, onSelec
             maxClusterRadius: 80, // Increased from 50 to reduce clutter
             iconCreateFunction: function (cluster: any) {
                 const childCount = cluster.getChildCount();
+
+                // Check if any child has hiring status
+                const children = cluster.getAllChildMarkers();
+                let hasHiring = false;
+                for (let i = 0; i < children.length; i++) {
+                    if (children[i].options.collegeData && (children[i].options.collegeData.isHiring || children[i].options.collegeData.openings.length > 0)) {
+                        hasHiring = true;
+                        break;
+                    }
+                }
+
+                // Hiring notification dot (Success 500)
+                const notificationHtml = hasHiring
+                    ? `<div class="absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-white" style="background-color: var(--colors_success_500);"></div>`
+                    : '';
+
+                // Add styling class if hiring
+                const hiringClass = hasHiring ? 'hiring-cluster' : '';
+
                 return L.divIcon({
-                    html: `<div class="custom-cluster"><span>${childCount}</span></div>`,
+                    html: `<div class="custom-cluster relative ${hiringClass}"><span>${childCount}</span>${notificationHtml}</div>`,
                     className: 'custom-cluster-icon',
                     iconSize: L.point(32, 32)
                 });
@@ -151,48 +202,66 @@ const MapComponent: React.FC<MapProps> = ({ colleges, selectedCollegeId, onSelec
         const L = (window as any).L;
 
         const getMarkerHtml = (college: College, zoom: number, isSelected: boolean) => {
-            const isHiring = college.openings.length > 0;
-            let content = '';
+            const isHiring = college.isHiring || college.openings.length > 0;
+            const isGovt = college.type === 'Govt.';
 
-            // Simplified logic for reduced clutter
-            if (zoom < 10) {
-                // Low zoom: Show simple colored dots only
-                // Green for Govt, Purple for Private (matches existing theme)
-                const colorClass = college.type === 'Govt.'
-                    ? 'bg-[var(--colors_background_bg_success_primary)]'
-                    : 'bg-[var(--colors_text_text_brand_primary_900_)]';
+            // Colors using CSS variables (will be interpreted by browser)
+            // Default: Neutral Gray (Gray 400 - Lighter shade as requested)
+            // Hiring: Success Green
+            const pinColor = isHiring
+                ? 'var(--colors_text_text_success_primary_600_)'
+                : 'var(--colors_gray_light_mode_400)';
 
-                content = `<div class="w-2.5 h-2.5 rounded-full ${colorClass} border border-white shadow-sm"></div>`;
-
-                // Return stricter HTML for low zoom - no pill container
-                return `
-                <div class="flex items-center justify-center ${isSelected ? 'scale-150' : ''} transition-transform duration-300">
-                    ${content}
-                    ${isHiring ? '<div class="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-500 border border-white"></div>' : ''}
-                </div>
+            // SVG Pin Icon
+            const pinSvg = `
+                <svg width="24" height="32" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.15));">
+                    <path d="M12 0C5.37258 0 0 5.37258 0 12C0 20 12 32 12 32C12 32 24 20 24 12C24 5.37258 18.6274 0 12 0Z" fill="${pinColor}"/>
+                    <circle cx="12" cy="12" r="6" fill="white"/>
+                </svg>
             `;
+
+            // Simplified logic for reduced clutter at low zoom
+            // User Request: Show small Pin (8x11px) instead of full size
+            if (zoom < 10) {
+                const smallPinSvg = `
+                    <svg width="15" height="20" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0px 1px 1px rgba(0,0,0,0.15));">
+                        <path d="M12 0C5.37258 0 0 5.37258 0 12C0 20 12 32 12 32C12 32 24 20 24 12C24 5.37258 18.6274 0 12 0Z" fill="${pinColor}"/>
+                        <circle cx="12" cy="12" r="6" fill="white"/>
+                    </svg>
+                `;
+                return `
+                    <div class="flex items-center justify-center group ${isSelected ? 'scale-110 z-50' : 'z-10'} transition-transform duration-200">
+                         <div class="relative flex-shrink-0">
+                            ${smallPinSvg}
+                         </div>
+                    </div>
+                `;
             }
 
-            // High zoom: Show full pill with text
-            if (zoom < 13) {
-                const shortName = college.name.length > 15 ? college.name.substring(0, 12) + '...' : college.name;
-                content = `<span>${shortName}</span>`;
-            } else {
-                const fullName = college.name.length > 25 ? college.name.substring(0, 25) + '...' : college.name;
-                content = `<span>${fullName}</span>`;
-            }
+            // High Zoom: Pin + Text
 
-            // Use semantic class for the badge
-            const hiringBadge = isHiring
-                ? `<div class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full border" style="background-color: var(--colors_background_bg_success_primary); border-color: var(--colors_background_bg_secondary);"></div>`
-                : '';
+            const name = college.name;
+
+            // Updated Text Style with CSS Class
+            // Layout (width, clamping) is kept inline for specific behavior, appearance moved to CSS
+            const layoutStyle = `
+                width: 140px;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+                white-space: normal;
+                margin-left: 6px;
+            `;
 
             return `
-            <div class="map-marker-pill ${isSelected ? 'active' : ''} ${isHiring ? 'hiring' : ''}">
-                ${content}
-                ${hiringBadge}
-            </div>
-        `;
+                <div class="flex items-center group ${isSelected ? 'scale-110 z-50' : 'z-10'} transition-transform duration-200">
+                    <div class="relative flex-shrink-0">
+                        ${pinSvg}
+                    </div>
+                    <span style="${layoutStyle}" class="marker-text pointer-events-auto group-hover:z-50">${name}</span>
+                </div>
+            `;
         };
 
         clusterGroup.clearLayers();
@@ -203,11 +272,23 @@ const MapComponent: React.FC<MapProps> = ({ colleges, selectedCollegeId, onSelec
         colleges.forEach((college) => {
             const isSelected = selectedCollegeId === college.id;
 
+            // Adjust anchor based on zoom (Pin vs Dot)
+            // But since iconCreateFunction is static in loop, we rely on the div centering
+            // For Pin (24x32), anchor at [12, 32] (Tip)
+            // For Dot (10x10), anchor at [5, 5] (Center)
+            // We can check currentZoom here since we re-run this effect on zoom change? 
+            // Yes, [colleges, selectedCollegeId, currentZoom...] is dep array.
+
+            let anchor: [number, number] = [12, 32]; // Default for Pin
+            if (currentZoom < 10) {
+                anchor = [7.5, 20]; // For small Pin (15x20)
+            }
+
             const icon = L.divIcon({
-                className: 'custom-div-icon',
+                className: 'custom-div-icon', // We'll need to remove generic styles if they interfere or use 'bg-transparent'
                 html: getMarkerHtml(college, currentZoom, isSelected),
-                iconSize: [null, null],
-                iconAnchor: [40, 30]
+                iconSize: [null, null], // Let content dictate size
+                iconAnchor: anchor
             });
 
             const marker = L.marker(college.coordinates, {
@@ -238,6 +319,9 @@ const MapComponent: React.FC<MapProps> = ({ colleges, selectedCollegeId, onSelec
         const map = mapInstanceRef.current;
         const clusterGroup = clusterGroupRef.current;
         if (!map || !selectedCollegeId) return;
+
+        // Skip auto-zoom if disabled
+        if (!autoZoomOnSelect) return;
 
         const L = (window as any).L;
 

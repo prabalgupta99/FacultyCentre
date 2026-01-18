@@ -1,10 +1,11 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { fetchColleges } from './services/collegeService';
+import { fetchColleges, fetchCollegesInBounds } from './services/collegeService';
 import { CollegeType, College } from './types';
 import MapComponent from './components/Map';
 import CollegeList from './components/CollegeList';
 import JobDetailsSheet from './components/JobDetailsSheet';
+import CollegeDetailsManager from './components/CollegeDetailsManager';
 import ClusterDrawer from './components/ClusterDrawer';
 import ThemeToggle from './components/ThemeToggle';
 import { Search, Map as MapIcon, List as ListIcon, X, AlertTriangle, ChevronDown, Plus, Minus, Compass, ArrowUp } from 'lucide-react';
@@ -18,7 +19,7 @@ const App: React.FC = () => {
 
   // Initialize Theme
   useEffect(() => {
-    const savedTheme = localStorage.getItem('facultyfinder-theme') as 'light' | 'dark' | null;
+    const savedTheme = localStorage.getItem('faculty-centre-theme') as 'light' | 'dark' | null;
     if (savedTheme) {
       setTheme(savedTheme);
       document.documentElement.setAttribute('data-theme', savedTheme);
@@ -31,14 +32,16 @@ const App: React.FC = () => {
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(newTheme);
-    localStorage.setItem('facultyfinder-theme', newTheme);
+    localStorage.setItem('faculty-centre-theme', newTheme);
     document.documentElement.setAttribute('data-theme', newTheme);
   };
 
   // State for Data
   const [colleges, setColleges] = useState<College[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [dbStatus, setDbStatus] = useState<{ error: string | null }>({ error: null });
+  const [mapBounds, setMapBounds] = useState<{ minLat: number; maxLat: number; minLng: number; maxLng: number } | null>(null);
 
   const [selectedCollegeId, setSelectedCollegeId] = useState<string | null>(null);
   const [clusterColleges, setClusterColleges] = useState<College[]>([]);
@@ -54,25 +57,54 @@ const App: React.FC = () => {
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<CollegeType | 'ALL'>('ALL');
-  const [hiringFilter, setHiringFilter] = useState<'all' | 'yes' | 'no'>('all');
+  const [hiringFilter, setHiringFilter] = useState<'all' | 'yes' | 'no'>('yes');
 
   // Map Instance
   const [mapInstance, setMapInstance] = useState<any>(null);
   const [showRecenter, setShowRecenter] = useState(false);
 
-  // Initial Data Fetch
+  // Data Fetching Logic (Google Maps Style)
   useEffect(() => {
-    const loadData = async () => {
+    const fetchWithBounds = async () => {
       setLoading(true);
-      const { data, error } = await fetchColleges();
-      setColleges(data);
+
+      // Default to India bounds if map isn't ready
+      const bounds = mapBounds || {
+        minLat: 6.0,
+        maxLat: 38.0,
+        minLng: 68.0,
+        maxLng: 98.0
+      };
+
+      const filterOptions = {
+        search: searchQuery,
+        isHiring: hiringFilter === 'yes' ? true : undefined
+      };
+
+      const { data, error } = await fetchCollegesInBounds(bounds, filterOptions);
+
       if (error) {
         setDbStatus({ error });
+        // Fallback to mock/all if needed, but for now just show error
+      } else {
+        setColleges(data);
       }
       setLoading(false);
+      setIsInitialLoad(false);
     };
-    loadData();
-  }, []);
+
+    // Debounce fetching to avoid flickering
+    const timer = setTimeout(() => {
+      fetchWithBounds();
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [mapBounds, searchQuery, hiringFilter]); // Re-fetch when map moves or filters change
+
+  // Map Bounds Handler
+  const handleBoundsChange = (bounds: { minLat: number; maxLat: number; minLng: number; maxLng: number }) => {
+    setMapBounds(bounds);
+  };
 
   // Filter Refresh Simulation
   useEffect(() => {
@@ -83,7 +115,7 @@ const App: React.FC = () => {
     return () => clearTimeout(timer);
   }, [searchQuery, filterType, hiringFilter]);
 
-  // Map Move Listener
+  // Map Move Listener (Optimization: handleBoundsChange handles fetch)
   useEffect(() => {
     if (!mapInstance) return;
 
@@ -154,17 +186,23 @@ const App: React.FC = () => {
       }
 
       return matchesSearch && matchesType && matchesHiring;
+    }).sort((a, b) => {
+      // Prioritize colleges that are hiring
+      const aHiring = a.isHiring || a.openings.length > 0;
+      const bHiring = b.isHiring || b.openings.length > 0;
+
+      if (aHiring && !bHiring) return -1;
+      if (!aHiring && bHiring) return 1;
+
+      // Secondary sort: Alphabetical by Name
+      return a.name.localeCompare(b.name);
     });
   }, [colleges, searchQuery, filterType, hiringFilter]);
 
-  const selectedCollege = useMemo(() =>
-    colleges.find(c => c.id === selectedCollegeId),
-    [selectedCollegeId, colleges]
-  );
 
   const handleCollegeSelect = (id: string) => {
+    const college = colleges.find(c => c.id === id);
     setSelectedCollegeId(id);
-    setIsListViewOpen(false);
 
     // Only close cluster drawer if the selected college is NOT in the current cluster list.
     // This preserves the "Back to list" capability by keeping the drawer open in background.
@@ -191,12 +229,46 @@ const App: React.FC = () => {
   const controlsVisible = !isClusterDrawerOpen && !selectedCollegeId;
   const controlsOpacityClass = controlsVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none';
 
-  if (loading) {
+  if (loading && isInitialLoad) {
     return (
-      <div className="h-screen w-full flex items-center justify-center bg-colors_background_bg_primary">
-        <div className="animate-pulse flex flex-col items-center">
-          <div className="h-spacing_4xl w-spacing_4xl rounded-radius_sm mb-spacing_xl bg-colors_background_bg_brand_solid"></div>
-          <div className="text-text-sm-medium text-colors_text_text_tertiary_600_">Loading FacultyFinder...</div>
+      <div className="h-screen w-full flex items-center justify-center bg-colors_background_bg_primary relative overflow-hidden">
+        {/* Ambient Background Gradient (Subtle) */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-colors_background_bg_brand_solid_subtle/30 via-transparent to-colors_background_bg_brand_solid_subtle/30 animate-pulse pointer-events-none" />
+
+        <div className="flex flex-col items-center justify-center z-10 p-spacing_2xl">
+          {/* Logo Container */}
+          <div className="relative mb-spacing_4xl group">
+            {/* Outer Glow Ring */}
+            <div className="absolute -inset-4 bg-gradient-to-r from-colors_background_bg_brand_solid to-colors_background_bg_brand_section rounded-full opacity-20 blur-xl group-hover:opacity-30 transition-opacity duration-1000 animate-pulse" />
+
+            {/* Icon Container - Using Valid Semantic Tokens */}
+            <div className="relative w-24 h-24 rounded-3xl bg-gradient-to-br from-colors_background_bg_brand_solid to-colors_background_bg_brand_section shadow-shadow_floating flex items-center justify-center transform transition-transform duration-700 hover:scale-105 hover:rotate-3">
+              {/* Inner Shine */}
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-tr from-white/20 to-transparent opacity-50 pointer-events-none" />
+
+              {/* Material Symbol Icon */}
+              <div className="text-white drop-shadow-md flex items-center justify-center w-full h-full">
+                <span className="material-symbols-rounded text-[48px] leading-none animate-[breathe_2s_ease-in-out_infinite]">
+                  work
+                </span>
+              </div>
+            </div>
+
+            {/* Decor elements */}
+            <div className="absolute -right-2 -top-2 w-5 h-5 bg-colors_background_bg_success_primary rounded-full border-2 border-white shadow-sm animate-[ping_3s_cubic-bezier(0,0,0.2,1)_infinite]" />
+          </div>
+
+          {/* Typography */}
+          <div className="space-y-spacing_xs text-center">
+            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-colors_text_text_brand_primary_900_ to-colors_background_bg_brand_solid tracking-tight animate-in fade-in slide-in-from-bottom-2 duration-700">
+              Faculty Centre
+            </h1>
+            <div className="flex items-center gap-2 justify-center mt-spacing_lg">
+              <div className="w-2 h-2 rounded-full bg-colors_background_bg_brand_solid animate-bounce [animation-delay:-0.3s]" />
+              <div className="w-2 h-2 rounded-full bg-colors_background_bg_brand_solid animate-bounce [animation-delay:-0.15s]" />
+              <div className="w-2 h-2 rounded-full bg-colors_background_bg_brand_solid animate-bounce" />
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -230,7 +302,7 @@ const App: React.FC = () => {
           </div>
           <input
             type="text"
-            placeholder="Search FacultyCentre..."
+            placeholder="Search Faculty Centre..."
             className="flex-1 h-full bg-transparent focus:outline-none text-text-xs-regular text-colors_text_text_primary_900_ placeholder-colors_text_text_tertiary_600_"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -315,6 +387,14 @@ const App: React.FC = () => {
         </button>
       </div>
 
+      {/* Loading Indicator for Map Updates */}
+      {loading && !isInitialLoad && (
+        <div className="absolute top-spacing_10xl md:top-spacing_xl left-1/2 transform -translate-x-1/2 z-[500] bg-colors_background_bg_primary px-spacing_lg py-spacing_xs rounded-radius_full shadow-shadow_floating border border-colors_border_border_secondary flex items-center gap-spacing_sm">
+          <div className="w-4 h-4 border-2 border-colors_border_border_brand_solid border-t-transparent rounded-full animate-spin"></div>
+          <span className="text-text-xs-medium text-colors_text_text_secondary_700_">Updating area...</span>
+        </div>
+      )}
+
       {/* 4. Bottom Right Controls Group */}
       <div className={`absolute bottom-spacing_xl right-spacing_xl z-[400] flex flex-col items-center transition-all duration-300 ease-in-out ${controlsOpacityClass}`}>
         {/* Back To Top */}
@@ -336,7 +416,7 @@ const App: React.FC = () => {
         <div className={`transition-all duration-300 ease-in-out overflow-hidden origin-bottom p-spacing_xs ${!isListViewOpen ? 'max-h-[120px] opacity-100' : 'max-h-0 opacity-0'}`}>
           <div className="flex flex-col h-fit rounded-radius_full shadow-shadow_card overflow-hidden border border-colors_border_border_secondary bg-colors_background_bg_secondary">
             <button
-              onClick={() => mapInstance?.zoomIn()}
+              onClick={() => mapInstance?.zoomIn(2)}
               className="w-spacing_5xl h-spacing_5xl flex items-center justify-center hover:opacity-80 transition-colors active:scale-95 text-colors_text_text_primary_900_"
               title="Zoom In"
             >
@@ -344,7 +424,7 @@ const App: React.FC = () => {
             </button>
             <div className="h-[1px] w-full bg-colors_border_border_secondary" />
             <button
-              onClick={() => mapInstance?.zoomOut()}
+              onClick={() => mapInstance?.zoomOut(2)}
               className="w-spacing_5xl h-spacing_5xl flex items-center justify-center hover:opacity-80 transition-colors active:scale-95 text-colors_text_text_primary_900_"
               title="Zoom Out"
             >
@@ -362,6 +442,8 @@ const App: React.FC = () => {
           onSelectCollege={handleCollegeSelect}
           onClusterClick={handleClusterSelect}
           onMapReady={setMapInstance}
+          onBoundsChange={handleBoundsChange}
+          autoZoomOnSelect={!isListViewOpen}
         />
       </main>
 
@@ -394,13 +476,12 @@ const App: React.FC = () => {
         onSelectCollege={handleCollegeSelect}
       />
 
-      {/* Job Details Sheet */}
-      {selectedCollege && (
-        <JobDetailsSheet
-          college={selectedCollege}
-          onClose={() => setSelectedCollegeId(null)}
-        />
-      )}
+      {/* Job Details Manager (Handles Caching) */}
+      <CollegeDetailsManager
+        colleges={colleges}
+        selectedCollegeId={selectedCollegeId}
+        onClose={() => setSelectedCollegeId(null)}
+      />
 
       {/* DB Status Notification */}
       {dbStatus.error && (
@@ -414,6 +495,8 @@ const App: React.FC = () => {
           </div>
         </div>
       )}
+
+
     </div>
   );
 };

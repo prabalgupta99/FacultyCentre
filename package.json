@@ -6,14 +6,22 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "sync:sheets": "tsx scripts/sync-spreadsheet.ts",
+    "analyze:batch": "tsx scripts/batch-analyze-careers.ts",
+    "sync:all": "npm run sync:sheets && npm run analyze:batch"
   },
   "dependencies": {
+    "@google/genai": "^1.34.0",
+    "@supabase/supabase-js": "^2.89.0",
+    "@types/jsdom": "^27.0.0",
+    "csv-parse": "^6.1.0",
+    "jsdom": "^27.4.0",
+    "lucide-react": "^0.562.0",
+    "p-limit": "^7.2.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "@google/genai": "^1.34.0",
-    "lucide-react": "^0.562.0",
-    "@supabase/supabase-js": "^2.89.0"
+    "tsx": "^4.21.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
