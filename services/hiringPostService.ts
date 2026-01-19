@@ -16,6 +16,8 @@ interface ManualHiringPostRow {
     salary: string;
     has_application_fee: boolean;
     application_fee: string | null;
+    has_postal_address: boolean;
+    postal_address: string | null;
     created_at: string;
     updated_at: string;
 }
@@ -56,6 +58,8 @@ const mapRowToPost = (row: ManualHiringPostRow): ManualHiringPost => ({
     salary: row.salary,
     hasApplicationFee: row.has_application_fee,
     applicationFee: row.application_fee || undefined,
+    hasPostalAddress: row.has_postal_address,
+    postalAddress: row.postal_address || undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
 });
@@ -74,6 +78,8 @@ const mapPostToRow = (post: Omit<ManualHiringPost, 'id' | 'createdAt' | 'updated
     salary: post.salary,
     has_application_fee: post.hasApplicationFee,
     application_fee: post.applicationFee || null,
+    has_postal_address: post.hasPostalAddress,
+    postal_address: post.postalAddress || null,
 });
 
 /**
@@ -188,6 +194,8 @@ export const updateHiringPost = async (
         if (updates.salary !== undefined) updateData.salary = updates.salary;
         if (updates.hasApplicationFee !== undefined) updateData.has_application_fee = updates.hasApplicationFee;
         if (updates.applicationFee !== undefined) updateData.application_fee = updates.applicationFee || null;
+        if (updates.hasPostalAddress !== undefined) updateData.has_postal_address = updates.hasPostalAddress;
+        if (updates.postalAddress !== undefined) updateData.postal_address = updates.postalAddress || null;
 
         updateData.updated_at = new Date().toISOString();
 
@@ -355,6 +363,8 @@ export const createMultipleHiringPosts = async (
             salary: postData.salary,
             has_application_fee: postData.hasApplicationFee,
             application_fee: postData.applicationFee || null,
+            has_postal_address: postData.hasPostalAddress,
+            postal_address: postData.postalAddress || null,
         }));
 
         const { data, error } = await supabase

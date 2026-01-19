@@ -28,6 +28,8 @@ export interface ManualHiringPost {
   salary: string;
   hasApplicationFee: boolean;
   applicationFee?: string;
+  hasPostalAddress: boolean;
+  postalAddress?: string;
   createdAt?: string;
   updatedAt?: string;
 }

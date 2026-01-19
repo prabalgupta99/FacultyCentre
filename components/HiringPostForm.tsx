@@ -90,6 +90,8 @@ const HiringPostForm: React.FC<HiringPostFormProps> = ({
         salary: initialData?.salary || '',
         hasApplicationFee: initialData?.hasApplicationFee || false,
         applicationFee: initialData?.applicationFee || '',
+        hasPostalAddress: initialData?.hasPostalAddress || false,
+        postalAddress: initialData?.postalAddress || '',
     });
 
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -160,6 +162,10 @@ const HiringPostForm: React.FC<HiringPostFormProps> = ({
             newErrors.applicationFee = 'Application fee details are required when "Has Application Fee" is checked';
         }
 
+        if (formData.hasPostalAddress && !formData.postalAddress.trim()) {
+            newErrors.postalAddress = 'Postal address is required when "Has Postal Address" is checked';
+        }
+
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
             return;
@@ -211,6 +217,8 @@ const HiringPostForm: React.FC<HiringPostFormProps> = ({
                     salary: formData.salary.trim(),
                     hasApplicationFee: formData.hasApplicationFee,
                     applicationFee: formData.hasApplicationFee ? formData.applicationFee.trim() : undefined,
+                    hasPostalAddress: formData.hasPostalAddress,
+                    postalAddress: formData.hasPostalAddress ? formData.postalAddress.trim() : undefined,
                 });
 
                 // If user added MORE positions during edit, create them as NEW posts
@@ -228,6 +236,8 @@ const HiringPostForm: React.FC<HiringPostFormProps> = ({
                         salary: formData.salary.trim(),
                         hasApplicationFee: formData.hasApplicationFee,
                         applicationFee: formData.hasApplicationFee ? formData.applicationFee.trim() : undefined,
+                        hasPostalAddress: formData.hasPostalAddress,
+                        postalAddress: formData.hasPostalAddress ? formData.postalAddress.trim() : undefined,
                     };
 
                     const { error: batchError, count } = await createMultipleHiringPosts(newPositions, postData);
@@ -258,6 +268,8 @@ const HiringPostForm: React.FC<HiringPostFormProps> = ({
                         salary: formData.salary.trim(),
                         hasApplicationFee: formData.hasApplicationFee,
                         applicationFee: formData.hasApplicationFee ? formData.applicationFee.trim() : undefined,
+                        hasPostalAddress: formData.hasPostalAddress,
+                        postalAddress: formData.hasPostalAddress ? formData.postalAddress.trim() : undefined,
                     });
                 } else {
                     // Multiple positions - use batch creation
@@ -273,6 +285,8 @@ const HiringPostForm: React.FC<HiringPostFormProps> = ({
                         salary: formData.salary.trim(),
                         hasApplicationFee: formData.hasApplicationFee,
                         applicationFee: formData.hasApplicationFee ? formData.applicationFee.trim() : undefined,
+                        hasPostalAddress: formData.hasPostalAddress,
+                        postalAddress: formData.hasPostalAddress ? formData.postalAddress.trim() : undefined,
                     };
 
                     const { error: batchError, count } = await createMultipleHiringPosts(positions, postData);
@@ -810,6 +824,50 @@ const HiringPostForm: React.FC<HiringPostFormProps> = ({
                             options={APPLICATION_FEE_OPTIONS}
                             onSelect={(val) => addChipValue('applicationFee', val)}
                         />
+                    </div>
+                )}
+            </div>
+
+            {/* Postal Address Section */}
+            <div className="p-spacing_xl rounded-radius_md border border-colors_border_border_secondary bg-colors_background_bg_secondary">
+                <div className="flex items-center gap-spacing_md mb-spacing_lg">
+                    <input
+                        id="hasPostalAddress"
+                        type="checkbox"
+                        checked={formData.hasPostalAddress}
+                        onChange={(e) => {
+                            setFormData({ ...formData, hasPostalAddress: e.target.checked });
+                            if (!e.target.checked) {
+                                setFormData(prev => ({ ...prev, postalAddress: '' }));
+                                setErrors({ ...errors, postalAddress: '' });
+                            }
+                        }}
+                        className="w-4 h-4 rounded border-colors_border_border_secondary text-colors_background_bg_brand_solid focus:ring-2 focus:ring-colors_background_bg_brand_solid/20"
+                    />
+                    <label htmlFor="hasPostalAddress" className="text-text-sm-medium text-colors_text_text_primary_900_">
+                        Has Postal Address
+                    </label>
+                </div>
+
+                {formData.hasPostalAddress && (
+                    <div>
+                        <label htmlFor="postalAddress" className="block text-text-sm-medium text-colors_text_text_primary_900_ mb-spacing_sm">
+                            Postal Address <span className="text-red-500">*</span>
+                        </label>
+                        <textarea
+                            id="postalAddress"
+                            rows={3}
+                            value={formData.postalAddress}
+                            onChange={(e) => {
+                                setFormData({ ...formData, postalAddress: e.target.value });
+                                setErrors({ ...errors, postalAddress: '' });
+                            }}
+                            className="w-full px-spacing_lg py-spacing_md rounded-radius_md border border-colors_border_border_secondary bg-colors_background_bg_primary text-text-sm-regular text-colors_text_text_primary_900_ focus:outline-none focus:border-colors_border_border_brand_solid focus:ring-2 focus:ring-colors_background_bg_brand_solid/20 resize-none"
+                            placeholder="e.g., The Principal, ABC College, Mumbai - 400001"
+                        />
+                        {errors.postalAddress && (
+                            <p className="text-text-xs-regular text-red-600 mt-spacing_xs">{errors.postalAddress}</p>
+                        )}
                     </div>
                 )}
             </div>

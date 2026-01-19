@@ -108,6 +108,10 @@ export const fetchCollegesInBounds = async (
         hasEmail: post.has_email,
         emailId: post.email_id || undefined,
         salary: post.salary,
+        hasApplicationFee: post.has_application_fee,
+        applicationFee: post.application_fee || undefined,
+        hasPostalAddress: post.has_postal_address,
+        postalAddress: post.postal_address || undefined,
         createdAt: post.created_at,
         updatedAt: post.updated_at,
       });

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { College, Job, isHiringPostActive } from '../types';
-import { ChevronRight, Clock, MapPin, ExternalLink, Globe, ArrowLeft, AlertCircle, Mail, FileText, Check } from 'lucide-react';
+import { ChevronRight, Clock, MapPin, ExternalLink, Globe, ArrowLeft, AlertCircle, Mail, FileText, Check, Copy } from 'lucide-react';
 import { checkIframeCompatibility } from '../services/collegeService';
 
 interface JobDetailsSheetProps {
@@ -13,6 +13,7 @@ interface JobDetailsSheetProps {
 const JobDetailsSheet: React.FC<JobDetailsSheetProps> = ({ college, isOpen, onClose }) => {
     const [selectedJob, setSelectedJob] = useState<Job | null>(null);
     const [copiedEmailPostId, setCopiedEmailPostId] = useState<number | null>(null);
+    const [copiedPostalPostId, setCopiedPostalPostId] = useState<number | null>(null);
 
     // Calculate active manual posts count
     const activeManualPosts = (college.manualHiringPosts || []).filter(post =>
@@ -186,7 +187,7 @@ const JobDetailsSheet: React.FC<JobDetailsSheetProps> = ({ college, isOpen, onCl
 
                                         return (
                                             <div key={post.id} className="border border-colors_border_border_secondary rounded-radius_md overflow-hidden h-full flex flex-col">
-                                                <div className="p-spacing_2xl bg-colors_background_bg_secondary flex-1">
+                                                <div className="p-spacing_2xl bg-colors_background_bg_secondary">
                                                     <div className="flex justify-between items-start mb-spacing_lg">
                                                         <div className="flex-1 pr-spacing_lg">
                                                             <h3 className="text-text-md-semibold text-colors_text_text_primary_900_">
@@ -219,7 +220,7 @@ const JobDetailsSheet: React.FC<JobDetailsSheetProps> = ({ college, isOpen, onCl
                                                     </div>
                                                 </div>
 
-                                                <div className="p-spacing_2xl border-t border-colors_border_border_secondary bg-colors_background_bg_primary">
+                                                <div className="p-spacing_2xl border-t border-colors_border_border_secondary bg-colors_background_bg_primary flex-1">
                                                     <div className="flex flex-col gap-spacing_3xl">
                                                         <div>
                                                             <h4 className="text-[11px] font-bold uppercase tracking-wider mb-spacing_sm text-colors_text_text_tertiary_600_">
@@ -252,16 +253,60 @@ const JobDetailsSheet: React.FC<JobDetailsSheetProps> = ({ college, isOpen, onCl
 
                                                         {post.hasEmail && post.emailId && (
                                                             <div>
-                                                                <h4 className="text-[11px] font-bold uppercase tracking-wider mb-spacing_sm text-colors_text_text_tertiary_600_">
-                                                                    Email
-                                                                </h4>
+                                                                <div className="flex items-center gap-spacing_sm mb-spacing_sm">
+                                                                    <h4 className="text-[11px] font-bold uppercase tracking-wider text-colors_text_text_tertiary_600_">
+                                                                        Email
+                                                                    </h4>
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            navigator.clipboard.writeText(post.emailId!);
+                                                                            setCopiedEmailPostId(post.id);
+                                                                            setTimeout(() => setCopiedEmailPostId(null), 2000);
+                                                                        }}
+                                                                        className="p-spacing_xs rounded-radius_md text-colors_text_text_tertiary_600_ hover:bg-colors_background_bg_tertiary hover:text-colors_text_text_primary_900_ transition-colors"
+                                                                        title="Copy email to clipboard"
+                                                                    >
+                                                                        {copiedEmailPostId === post.id ? (
+                                                                            <Check size={14} className="text-green-600" />
+                                                                        ) : (
+                                                                            <Copy size={14} />
+                                                                        )}
+                                                                    </button>
+                                                                </div>
                                                                 <a
                                                                     href={`mailto:${post.emailId}`}
-                                                                    className="text-text-sm-regular text-colors_text_text_brand_primary_600_ hover:text-colors_text_text_brand_primary_800_ flex items-center gap-spacing_sm transition-colors"
+                                                                    className="text-text-sm-regular text-colors_text_text_brand_primary_600_ hover:text-colors_text_text_brand_primary_800_ transition-colors"
                                                                 >
-                                                                    <Mail size={14} />
                                                                     {post.emailId}
                                                                 </a>
+                                                            </div>
+                                                        )}
+
+                                                        {post.hasPostalAddress && post.postalAddress && (
+                                                            <div>
+                                                                <div className="flex items-center gap-spacing_sm mb-spacing_sm">
+                                                                    <h4 className="text-[11px] font-bold uppercase tracking-wider text-colors_text_text_tertiary_600_">
+                                                                        Postal Address
+                                                                    </h4>
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            navigator.clipboard.writeText(post.postalAddress!);
+                                                                            setCopiedPostalPostId(post.id);
+                                                                            setTimeout(() => setCopiedPostalPostId(null), 2000);
+                                                                        }}
+                                                                        className="p-spacing_xs rounded-radius_md text-colors_text_text_tertiary_600_ hover:bg-colors_background_bg_tertiary hover:text-colors_text_text_primary_900_ transition-colors"
+                                                                        title="Copy address to clipboard"
+                                                                    >
+                                                                        {copiedPostalPostId === post.id ? (
+                                                                            <Check size={14} className="text-green-600" />
+                                                                        ) : (
+                                                                            <Copy size={14} />
+                                                                        )}
+                                                                    </button>
+                                                                </div>
+                                                                <p className="text-text-sm-regular text-colors_text_text_secondary_700_ whitespace-pre-wrap">
+                                                                    {post.postalAddress}
+                                                                </p>
                                                             </div>
                                                         )}
 
@@ -274,33 +319,6 @@ const JobDetailsSheet: React.FC<JobDetailsSheetProps> = ({ college, isOpen, onCl
                                                             >
                                                                 <FileText size={14} />
                                                                 View Advertisement
-                                                            </a>
-                                                        )}
-
-                                                        {post.hasEmail && post.emailId && (
-                                                            <a
-                                                                href={`mailto:${post.emailId}`}
-                                                                onClick={(e) => {
-                                                                    navigator.clipboard.writeText(post.emailId!);
-                                                                    setCopiedEmailPostId(post.id);
-                                                                    setTimeout(() => setCopiedEmailPostId(null), 2000);
-                                                                }}
-                                                                className={`w-full py-spacing_lg rounded-radius_md text-text-sm-semibold flex items-center justify-center gap-spacing_md transition-all ${copiedEmailPostId === post.id
-                                                                    ? 'bg-green-100 text-green-700 border border-green-200'
-                                                                    : 'bg-component_colors_components_buttons_primary_button_primary_bg text-component_colors_components_buttons_primary_button_primary_fg hover:opacity-90'
-                                                                    }`}
-                                                            >
-                                                                {copiedEmailPostId === post.id ? (
-                                                                    <>
-                                                                        <Check size={14} />
-                                                                        Email Copied & Opened
-                                                                    </>
-                                                                ) : (
-                                                                    <>
-                                                                        <Mail size={14} />
-                                                                        Apply via Email
-                                                                    </>
-                                                                )}
                                                             </a>
                                                         )}
                                                     </div>

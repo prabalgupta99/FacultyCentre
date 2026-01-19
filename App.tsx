@@ -19,7 +19,7 @@ const DEFAULT_ZOOM = 5;
 const App: React.FC = () => {
   // Check if we're on the admin route
   const isAdminRoute = window.location.pathname === '/admin/hiring-manager' ||
-    window.location.hash === '#/admin/hiring-manager';
+    window.location.hash.startsWith('#/admin/hiring-manager');
 
   // If admin route, render admin interface
   if (isAdminRoute) {

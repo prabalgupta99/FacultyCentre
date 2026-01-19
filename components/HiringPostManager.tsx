@@ -8,7 +8,7 @@ import {
     isPostActive
 } from '../services/hiringPostService';
 import HiringPostForm from './HiringPostForm';
-import { Plus, Edit2, Trash2, Calendar, Mail, ExternalLink, AlertCircle } from 'lucide-react';
+import { Plus, Edit2, Trash2, Calendar, Mail, ExternalLink, AlertCircle, ArrowLeft } from 'lucide-react';
 
 type ViewMode = 'list' | 'create' | 'edit';
 
@@ -27,6 +27,27 @@ const HiringPostManager: React.FC = () => {
 
     useEffect(() => {
         loadPosts();
+
+        // Handle URL hash routing
+        const handleHashChange = () => {
+            const hash = window.location.hash;
+            if (hash.endsWith('/new')) {
+                setViewMode('create');
+            } else if (hash.endsWith('/edit')) {
+                setViewMode('edit');
+                // Note: editingPost must be set before navigation or handled via ID lookup if persistence is needed.
+                // For now, if editingPost is missing on refresh, we'll redirect or show error, 
+                // but since this is client-side state for now, we assume user navigates from list.
+            } else {
+                setViewMode('list');
+                setEditingPost(null);
+            }
+        };
+
+        window.addEventListener('hashchange', handleHashChange);
+        handleHashChange(); // Initial check
+
+        return () => window.removeEventListener('hashchange', handleHashChange);
     }, []);
 
     const loadPosts = async () => {
@@ -50,7 +71,7 @@ const HiringPostManager: React.FC = () => {
             setError(error);
         } else if (data) {
             await loadPosts();
-            setViewMode('list');
+            window.history.back();
         }
     };
 
@@ -66,7 +87,7 @@ const HiringPostManager: React.FC = () => {
             setError(error);
         } else if (data) {
             await loadPosts();
-            setViewMode('list');
+            window.history.back();
             setEditingPost(null);
         }
     };
@@ -93,6 +114,14 @@ const HiringPostManager: React.FC = () => {
     if (viewMode === 'create') {
         return (
             <div>
+                <button
+                    onClick={() => window.history.back()}
+                    className="flex items-center gap-spacing_sm text-colors_text_text_secondary_700_ hover:text-colors_text_text_primary_900_ mb-spacing_lg transition-colors"
+                >
+                    <ArrowLeft size={20} />
+                    <span className="text-text-sm-medium">Back to List</span>
+                </button>
+
                 <div className="mb-spacing_3xl">
                     <h2 className="text-text-xl-bold text-colors_text_text_primary_900_">Add New Hiring Post</h2>
                     <p className="text-text-sm-regular text-colors_text_text_secondary_700_ mt-spacing_xs">
@@ -114,7 +143,7 @@ const HiringPostManager: React.FC = () => {
                     <HiringPostForm
                         onSave={handleCreate}
                         onCancel={() => {
-                            setViewMode('list');
+                            window.history.back();
                             setError('');
                         }}
                         isLoading={isLoading}
@@ -127,6 +156,14 @@ const HiringPostManager: React.FC = () => {
     if (viewMode === 'edit' && editingPost) {
         return (
             <div>
+                <button
+                    onClick={() => window.history.back()}
+                    className="flex items-center gap-spacing_sm text-colors_text_text_secondary_700_ hover:text-colors_text_text_primary_900_ mb-spacing_lg transition-colors"
+                >
+                    <ArrowLeft size={20} />
+                    <span className="text-text-sm-medium">Back to List</span>
+                </button>
+
                 <div className="mb-spacing_3xl">
                     <h2 className="text-text-xl-bold text-colors_text_text_primary_900_">Edit Hiring Post</h2>
                     <p className="text-text-sm-regular text-colors_text_text_secondary_700_ mt-spacing_xs">
@@ -149,7 +186,7 @@ const HiringPostManager: React.FC = () => {
                         initialData={editingPost}
                         onSave={handleUpdate}
                         onCancel={() => {
-                            setViewMode('list');
+                            window.history.back();
                             setEditingPost(null);
                             setError('');
                         }}
@@ -170,7 +207,7 @@ const HiringPostManager: React.FC = () => {
                     </p>
                 </div>
                 <button
-                    onClick={() => setViewMode('create')}
+                    onClick={() => window.location.hash = '#/admin/hiring-manager/new'}
                     className="flex items-center gap-spacing_sm px-spacing_xl py-spacing_md rounded-radius_md text-text-sm-semibold bg-component_colors_components_buttons_primary_button_primary_bg text-component_colors_components_buttons_primary_button_primary_fg hover:opacity-90 transition-opacity"
                 >
                     <Plus size={16} />
@@ -238,7 +275,7 @@ const HiringPostManager: React.FC = () => {
                                         <button
                                             onClick={() => {
                                                 setEditingPost(post);
-                                                setViewMode('edit');
+                                                window.location.hash = '#/admin/hiring-manager/edit';
                                             }}
                                             className="p-spacing_sm rounded-radius_md text-colors_text_text_secondary_700_ hover:bg-colors_background_bg_tertiary transition-colors"
                                             title="Edit"
@@ -316,6 +353,17 @@ const HiringPostManager: React.FC = () => {
                                                 <ExternalLink size={14} />
                                                 View Link
                                             </a>
+                                        </div>
+                                    )}
+
+                                    {post.hasPostalAddress && post.postalAddress && (
+                                        <div className="md:col-span-3">
+                                            <div className="text-text-xs-medium text-colors_text_text_tertiary_600_ mb-spacing_xs">
+                                                POSTAL ADDRESS
+                                            </div>
+                                            <p className="text-text-sm-regular text-colors_text_text_secondary_700_ whitespace-pre-wrap">
+                                                {post.postalAddress}
+                                            </p>
                                         </div>
                                     )}
                                 </div>
