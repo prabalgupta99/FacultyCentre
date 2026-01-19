@@ -58,20 +58,21 @@ const JobDetailsSheet: React.FC<JobDetailsSheetProps> = ({ college, isOpen, onCl
             <div className="h-[calc(100vh-200px)] flex flex-col gap-spacing_sm">
                 {url ? (
                     <>
-                        <div className="flex items-center justify-between px-spacing_xs flex-shrink-0">
-                            <span className="text-text-xs-regular text-colors_text_text_tertiary_600_ truncate flex-1 mr-spacing_md font-mono bg-colors_background_bg_secondary px-spacing_sm py-spacing_xxs rounded-radius_sm">
-                                {url}
-                            </span>
-                            <div className="flex items-center gap-spacing_md">
+                        <div className="flex items-center justify-between px-spacing_lg py-spacing_md bg-colors_background_bg_brand_solid_subtle border border-colors_border_border_secondary rounded-radius_sm">
+                            <div className="flex items-center gap-spacing_xs text-text-xs-regular text-colors_text_text_tertiary_600_">
+                                <span className="hidden sm:inline">Page not loading here?</span>
                                 <a
                                     href={url}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="text-text-xs-medium text-colors_text_text_brand_primary_600_ hover:text-colors_text_text_brand_primary_800_ flex items-center gap-spacing_xs whitespace-nowrap transition-colors"
+                                    className="text-text-xs-semibold text-colors_text_text_brand_action hover:text-colors_background_bg_brand_section transition-colors whitespace-nowrap hover:underline"
                                 >
-                                    Open in new tab <ExternalLink size={12} />
+                                    Open website in new tab
                                 </a>
                             </div>
+                            <span className="text-text-xs-regular text-colors_text_text_tertiary_600_ truncate font-mono ml-spacing_md max-w-[200px] sm:max-w-[300px]">
+                                {url}
+                            </span>
                         </div>
                         {isBlocked ? (
                             <div className="w-full h-full flex flex-col items-center justify-center bg-colors_background_bg_secondary border border-colors_border_border_secondary rounded-radius_md p-spacing_xl text-center">

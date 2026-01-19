@@ -58,28 +58,51 @@ export const fetchCollegesInBounds = async (
   filters?: { search?: string; isHiring?: boolean }
 ): Promise<{ data: College[]; error: string | null }> => {
   try {
-    let query = supabase
-      .from('colleges')
-      .select('*')
-      .gte('latitude', bounds.minLat)
-      .lte('latitude', bounds.maxLat)
-      .gte('longitude', bounds.minLng)
-      .lte('longitude', bounds.maxLng);
+    let allCollegesData: any[] = [];
+    let offset = 0;
+    const PAGE_SIZE = 1000; // Supabase default max rows
+    const MAX_LIMIT = 5000; // Our target limit
+    let hasMore = true;
 
-    // Apply Filters
-    if (filters?.isHiring) {
-      query = query.eq('is_hiring', true);
+    while (hasMore && allCollegesData.length < MAX_LIMIT) {
+      let query = supabase
+        .from('colleges')
+        .select('*')
+        .gte('latitude', bounds.minLat)
+        .lte('latitude', bounds.maxLat)
+        .gte('longitude', bounds.minLng)
+        .lte('longitude', bounds.maxLng);
+
+      // Apply Filters
+      if (filters?.isHiring) {
+        query = query.eq('is_hiring', true);
+      }
+
+      if (filters?.search) {
+        query = query.ilike('college_name_place', `%${filters.search}%`);
+      }
+
+      // Fetch page
+      const { data, error } = await query.range(offset, offset + PAGE_SIZE - 1);
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        allCollegesData = [...allCollegesData, ...data];
+        // If we got less than a full page, we've reached the end
+        if (data.length < PAGE_SIZE) {
+          hasMore = false;
+        }
+      } else {
+        hasMore = false;
+      }
+
+      offset += PAGE_SIZE;
     }
 
-    if (filters?.search) {
-      query = query.ilike('college_name_place', `%${filters.search}%`);
-    }
+    const collegesData = allCollegesData;
 
-    // Limit to prevent massive payloads if zoomed out too far
-    // Google Maps strategy: Caps results to keep performance high
-    const { data: collegesData, error } = await query.limit(1000);
 
-    if (error) throw error;
 
     if (!collegesData) return { data: [], error: null };
 

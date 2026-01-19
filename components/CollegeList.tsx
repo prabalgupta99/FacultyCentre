@@ -8,6 +8,7 @@ interface CollegeListProps {
   selectedCollegeId: string | null;
   onSelectCollege: (id: string) => void;
   isFiltering: boolean;
+  hiringFilter: 'all' | 'yes' | 'no';
 }
 
 const CollegeListSkeleton = () => (
@@ -21,14 +22,26 @@ const CollegeListSkeleton = () => (
   </div>
 );
 
-const CollegeList: React.FC<CollegeListProps> = ({ colleges, selectedCollegeId, onSelectCollege, isFiltering }) => {
+const CollegeList: React.FC<CollegeListProps> = ({ colleges, selectedCollegeId, onSelectCollege, isFiltering, hiringFilter }) => {
+
+  const getHeaderText = () => {
+    if (isFiltering) return 'Updating results...';
+
+    const count = colleges.length;
+    const suffix = count === 1 ? 'college' : 'colleges';
+
+    if (hiringFilter === 'yes') return `${count} ${suffix} are hiring`;
+    if (hiringFilter === 'no') return `${count} ${suffix} are not hiring`;
+    return `${count} ${suffix} available`;
+  };
+
   return (
     <div className="flex flex-col gap-spacing_xl pb-spacing_9xl pt-spacing_md">
 
       {(isFiltering || colleges.length > 0) && (
         <div className="flex items-center justify-between pl-spacing_xs pb-spacing_md">
           <h2 className="text-text-sm-semibold text-colors_text_text_secondary_700_">
-            {isFiltering ? 'Updating results...' : `Showing ${colleges.length} result${colleges.length !== 1 ? 's' : ''}`}
+            {getHeaderText()}
           </h2>
         </div>
       )}
@@ -47,61 +60,50 @@ const CollegeList: React.FC<CollegeListProps> = ({ colleges, selectedCollegeId, 
                 id={`card-${college.id}`}
                 onClick={() => onSelectCollege(college.id)}
                 className={`
-                  group relative p-spacing_2xl rounded-radius_md border transition-all duration-300 cursor-pointer bg-colors_background_bg_secondary
+                  group relative p-spacing_3xl rounded-radius_md border transition-all duration-300 cursor-pointer bg-colors_background_bg_secondary
                   ${isSelected
                     ? 'shadow-shadow_floating scale-[1.01] z-10 border-colors_border_border_brand_solid'
                     : 'hover:shadow-shadow_floating hover:-translate-y-0.5 hover:border-colors_border_border_brand_solid border-colors_border_border_secondary'
                   }
                 `}
               >
-                <div className="flex justify-between items-start mb-spacing_lg">
-                  <div className="flex-1 pr-spacing_lg">
+                <div className="flex justify-between items-start mb-spacing_2xl">
+                  <div className="flex-1 pr-spacing_xl">
                     {/* 1. Name First */}
-                    {/* 1. Name First */}
-                    <h3 className="text-text-lg-bold leading-tight mb-spacing_sm text-colors_text_text_primary_900_ group-hover:text-colors_text_text_brand_primary_900_ transition-colors">
+                    <h3 className="text-text-lg-bold leading-tight mb-spacing_lg text-colors_text_text_primary_900_ group-hover:text-colors_text_text_brand_primary_900_ transition-colors">
                       {college.name}
                     </h3>
 
                     {/* 2. Single Metadata Line: Type • Rank */}
-                    <div className="flex flex-col gap-spacing_xs mb-spacing_sm">
-                      <span className="flex items-start gap-spacing_xs w-full text-text-sm-regular text-colors_text_text_secondary_700_">
+                    <div className="flex flex-col gap-spacing_md">
+                      <span className="flex items-start gap-spacing_sm w-full text-text-sm-regular text-colors_text_text_secondary_700_">
                         <span className="material-symbols-rounded text-[20px] text-colors_text_text_secondary_700_ flex-shrink-0 mt-[2px]">school</span>
                         <span className="text-wrap">Affiliated to {college.affiliatingUniversity}</span>
                       </span>
 
-                      <div className="flex items-center gap-x-spacing_md text-text-xs-regular text-colors_text_text_tertiary_600_ pl-[26px]">
-                        {college.ranking && (
+                      {college.ranking && (
+                        <div className="flex items-center gap-x-spacing_md text-text-xs-regular text-colors_text_text_tertiary_600_ pl-[26px]">
                           <span className="text-colors_text_text_tertiary_600_">Rank #{college.ranking}</span>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  {/* Job Count Badge */}
-                  <div className={`flex flex-col items-center justify-center min-w-spacing_14 h-[52px] rounded-radius_md transition-colors flex-shrink-0 ml-spacing_md ${jobCount > 0 ? 'bg-component_colors_components_buttons_primary_button_primary_bg text-component_colors_components_buttons_primary_button_primary_fg' : 'bg-colors_background_bg_tertiary text-colors_text_text_tertiary_600_ border border-colors_border_border_secondary'
-                    }`}>
-                    <span className="text-text-lg-bold leading-none">{jobCount}</span>
-                    <span className="text-[9px] font-bold uppercase tracking-wider mt-spacing_xxs">Jobs</span>
-                  </div>
+                  {/* Hiring Status Badge (Replacement for Job Count) */}
+                  {college.isHiring && (
+                    <div className="flex items-center justify-center px-spacing_md py-spacing_xs rounded-radius_sm border border-colors_border_hiring bg-emerald-50 text-emerald-700 flex-shrink-0 ml-spacing_lg">
+                      <span className="text-[10px] font-bold uppercase tracking-wider">HIRING</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Footer */}
-                <div className="flex items-center justify-between pt-spacing_lg border-t border-colors_border_border_secondary">
-                  <a
-                    href={college.website}
-                    target="_blank"
-                    rel="noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="text-text-xs-medium hover:underline flex items-center gap-spacing_sm text-colors_text_text_secondary_700_"
+                <div className="flex items-center justify-start">
+                  <button
+                    className="flex items-center gap-spacing_sm text-text-sm-semibold text-colors_text_text_brand_action hover:opacity-80 transition-opacity"
                   >
-                    Visit website <ExternalLink size={12} />
-                  </a>
-
-                  {jobCount > 0 && (
-                    <span className="text-text-xs-semibold flex items-center gap-spacing_sm text-colors_text_text_success_primary_600_">
-                      <Briefcase size={12} /> Hiring
-                    </span>
-                  )}
+                    View details <ExternalLink size={16} />
+                  </button>
                 </div>
               </div>
             );

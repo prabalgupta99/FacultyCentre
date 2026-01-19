@@ -62,7 +62,7 @@ const App: React.FC = () => {
   const [clusterColleges, setClusterColleges] = useState<College[]>([]);
 
   // UI State
-  const [isListViewOpen, setIsListViewOpen] = useState(false);
+  const [isListViewOpen, setIsListViewOpen] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isFiltering, setIsFiltering] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -202,17 +202,75 @@ const App: React.FC = () => {
 
       return matchesSearch && matchesType && matchesHiring;
     }).sort((a, b) => {
-      // Prioritize colleges that are hiring
-      const aHiring = a.isHiring || a.openings.length > 0;
-      const bHiring = b.isHiring || b.openings.length > 0;
+      // Helper to get the most recent relevant date for a college
+      const getEffectiveDate = (college: College) => {
+        // 1. Manual Hiring Posts (Highest Priority)
+        if (college.manualHiringPosts && college.manualHiringPosts.length > 0) {
+          // Find the most recent manual post date
+          return college.manualHiringPosts.reduce((max, post) => {
+            return post.postingDate > max ? post.postingDate : max;
+          }, '');
+        }
 
-      if (aHiring && !bHiring) return -1;
-      if (!aHiring && bHiring) return 1;
+        // 2. Scraped Openings (Secondary Priority)
+        // Only consider if no manual posts exist (as per "Manual uses manual date" rule)
+        if (college.openings && college.openings.length > 0) {
+          // Find the most recent scraped post date (if available)
+          return college.openings.reduce((max, job) => {
+            // Check if job.postedDate exists and is valid
+            return job.postedDate && job.postedDate > max ? job.postedDate : max;
+          }, '');
+        }
 
-      // Secondary sort: Alphabetical by Name
+        return ''; // No date available
+      };
+
+      const dateA = getEffectiveDate(a);
+      const dateB = getEffectiveDate(b);
+
+      // Primary Sort: Date (Descending - Newest First)
+      if (dateA && dateB) {
+        if (dateA !== dateB) {
+          return dateB.localeCompare(dateA);
+        }
+      } else if (dateA) {
+        return -1; // A has date, B does not -> A first
+      } else if (dateB) {
+        return 1; // B has date, A does not -> B first
+      }
+
+      // Secondary Sort: Alphabetical by Name
       return a.name.localeCompare(b.name);
     });
   }, [colleges, searchQuery, filterType, hiringFilter]);
+
+  // Temporary Verification Logging
+  useEffect(() => {
+    if (filteredColleges.length > 0) {
+      console.log('--- Sorting Logic Verification (Top 10) ---');
+      const debugData = filteredColleges.slice(0, 10).map(c => {
+        let effectiveDate = '';
+        let source = 'None';
+
+        if (c.manualHiringPosts && c.manualHiringPosts.length > 0) {
+          effectiveDate = c.manualHiringPosts.reduce((max, p) => p.postingDate > max ? p.postingDate : max, '');
+          source = 'Manual';
+        } else if (c.openings && c.openings.length > 0) {
+          effectiveDate = c.openings.reduce((max, j) => j.postedDate && j.postedDate > max ? j.postedDate : max, '');
+          if (effectiveDate) source = 'Scraped';
+        }
+
+        return {
+          Name: c.name,
+          'Effective Date': effectiveDate,
+          Source: source,
+          'Has Manual': c.manualHiringPosts?.length || 0,
+          'Has Scraped': c.openings?.length || 0
+        };
+      });
+      console.table(debugData);
+    }
+  }, [filteredColleges]);
 
 
   // Browser Back Button Sync & Deep Linking
@@ -435,7 +493,7 @@ const App: React.FC = () => {
           }}
           className="h-spacing_5xl px-spacing_lg rounded-radius_full shadow-shadow_floating hover:scale-105 transition-transform font-semibold text-text-sm-semibold flex items-center gap-spacing_md border border-colors_border_border_secondary bg-colors_background_bg_secondary text-colors_text_text_primary_900_ whitespace-nowrap"
         >
-          {isListViewOpen ? <><MapIcon size={16} /> Show map</> : <><ListIcon size={16} /> Show list</>}
+          {isListViewOpen ? <><MapIcon size={16} /> See on map</> : <><ListIcon size={16} /> See as list</>}
         </button>
       </div>
 
@@ -460,7 +518,7 @@ const App: React.FC = () => {
         </div>
 
         {/* Theme Toggle */}
-        <div className={`transition-all duration-300 ease-in-out overflow-hidden p-spacing_xs ${!isListViewOpen ? 'max-h-[60px] opacity-100 mb-spacing_xs' : 'max-h-0 opacity-0 mb-0'}`}>
+        <div className={`transition-all duration-300 ease-in-out overflow-hidden p-spacing_xs ${/* Always visible now */ 'max-h-[60px] opacity-100 mb-spacing_xs'}`}>
           <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
         </div>
 
@@ -515,6 +573,7 @@ const App: React.FC = () => {
               selectedCollegeId={selectedCollegeId}
               onSelectCollege={handleCollegeSelect}
               isFiltering={isFiltering}
+              hiringFilter={hiringFilter}
             />
           </div>
         </div>
