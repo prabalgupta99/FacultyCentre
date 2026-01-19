@@ -14,6 +14,24 @@ export interface Job {
   requirements: string[];
 }
 
+export interface ManualHiringPost {
+  id: number;
+  collegeId: number;
+  positionName: string;
+  postingDate: string; // ISO date string (YYYY-MM-DD)
+  lastDateToApply: string; // ISO date string (YYYY-MM-DD)
+  applicationMedium: string;
+  hasAdvertisement: boolean;
+  advertisementLink?: string;
+  hasEmail: boolean;
+  emailId?: string;
+  salary: string;
+  hasApplicationFee: boolean;
+  applicationFee?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface College {
   id: string;
   name: string;
@@ -30,6 +48,7 @@ export interface College {
   affiliatingUniversity: string;
   careerPageUrl: string;
   isHiring: boolean;
+  manualHiringPosts?: ManualHiringPost[]; // Manual hiring posts from admin
 }
 
 export interface FilterState {
@@ -38,3 +57,12 @@ export interface FilterState {
   hiringOnly: boolean;
   states: string[]; // NEW: State filter
 }
+
+// Helper function to check if a hiring post is still active
+export const isHiringPostActive = (lastDateToApply: string): boolean => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const deadline = new Date(lastDateToApply);
+  deadline.setHours(0, 0, 0, 0);
+  return deadline >= today;
+};

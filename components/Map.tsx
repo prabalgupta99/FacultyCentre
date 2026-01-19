@@ -285,9 +285,9 @@ const MapComponent: React.FC<MapProps> = ({
             }
 
             const icon = L.divIcon({
-                className: 'custom-div-icon', // We'll need to remove generic styles if they interfere or use 'bg-transparent'
+                className: 'custom-div-icon', // Use custom class defined in index.html
                 html: getMarkerHtml(college, currentZoom, isSelected),
-                iconSize: [null, null], // Let content dictate size
+                iconSize: [0, 0], // CSS handles size
                 iconAnchor: anchor
             });
 

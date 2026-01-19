@@ -83,6 +83,36 @@ export const fetchCollegesInBounds = async (
 
     if (!collegesData) return { data: [], error: null };
 
+    // Fetch all manual hiring posts for colleges in bounds
+    const collegeIds = collegesData.map(row => row.id);
+    const { data: hiringPostsData } = await supabase
+      .from('manual_hiring_posts')
+      .select('*')
+      .in('college_id', collegeIds);
+
+    // Group hiring posts by college_id
+    const hiringPostsByCollege: Record<number, any[]> = {};
+    (hiringPostsData || []).forEach(post => {
+      if (!hiringPostsByCollege[post.college_id]) {
+        hiringPostsByCollege[post.college_id] = [];
+      }
+      hiringPostsByCollege[post.college_id].push({
+        id: post.id,
+        collegeId: post.college_id,
+        positionName: post.position_name,
+        postingDate: post.posting_date,
+        lastDateToApply: post.last_date_to_apply,
+        applicationMedium: post.application_medium,
+        hasAdvertisement: post.has_advertisement,
+        advertisementLink: post.advertisement_link || undefined,
+        hasEmail: post.has_email,
+        emailId: post.email_id || undefined,
+        salary: post.salary,
+        createdAt: post.created_at,
+        updatedAt: post.updated_at,
+      });
+    });
+
     const mappedColleges: College[] = collegesData.map((row: any) => ({
       id: row.id.toString(),
       name: row.college_name_place || 'Unknown College',
@@ -95,7 +125,8 @@ export const fetchCollegesInBounds = async (
       affiliatingUniversity: row.affiliating_university || '',
       careerPageUrl: row.career_page_url || '',
       isHiring: row.is_hiring || false,
-      openings: []
+      openings: [],
+      manualHiringPosts: hiringPostsByCollege[row.id] || []
     }));
 
     return { data: mappedColleges, error: null };

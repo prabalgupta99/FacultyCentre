@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { College, Job } from '../types';
-import { ChevronRight, Clock, MapPin, ExternalLink, Globe, ArrowLeft, AlertCircle } from 'lucide-react';
+import { College, Job, isHiringPostActive } from '../types';
+import { ChevronRight, Clock, MapPin, ExternalLink, Globe, ArrowLeft, AlertCircle, Mail, FileText } from 'lucide-react';
 import { checkIframeCompatibility } from '../services/collegeService';
 
 interface JobDetailsSheetProps {
@@ -12,7 +12,16 @@ interface JobDetailsSheetProps {
 
 const JobDetailsSheet: React.FC<JobDetailsSheetProps> = ({ college, isOpen, onClose }) => {
     const [selectedJob, setSelectedJob] = useState<Job | null>(null);
-    const [activeTab, setActiveTab] = useState<'career' | 'website' | 'jobs'>('career');
+
+    // Calculate active manual posts count
+    const activeManualPosts = (college.manualHiringPosts || []).filter(post =>
+        isHiringPostActive(post.lastDateToApply)
+    );
+    const hasActivePosts = activeManualPosts.length > 0;
+
+    const [activeTab, setActiveTab] = useState<'career' | 'website' | 'jobs'>(
+        hasActivePosts ? 'jobs' : 'career'
+    );
     const [embeddableStatus, setEmbeddableStatus] = useState<Record<string, boolean>>({});
     const [checkingStatus, setCheckingStatus] = useState<Record<string, boolean>>({});
 
@@ -127,6 +136,16 @@ const JobDetailsSheet: React.FC<JobDetailsSheetProps> = ({ college, isOpen, onCl
 
             <div className="flex-1 overflow-y-auto no-scrollbar">
                 <div className="flex border-b border-colors_border_border_secondary px-spacing_3xl overflow-x-auto">
+                    {/* Jobs tab first when there are active posts */}
+                    {hasActivePosts && (
+                        <button
+                            onClick={() => setActiveTab('jobs')}
+                            className={`py-spacing_lg px-spacing_xl text-text-sm-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === 'jobs' ? 'border-colors_border_border_brand_solid text-colors_text_text_primary_900_' : 'border-transparent text-colors_text_text_tertiary_600_'
+                                }`}
+                        >
+                            Jobs ({activeManualPosts.length})
+                        </button>
+                    )}
                     <button
                         onClick={() => setActiveTab('career')}
                         className={`py-spacing_lg px-spacing_xl text-text-sm-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === 'career' ? 'border-colors_border_border_brand_solid text-colors_text_text_primary_900_' : 'border-transparent text-colors_text_text_tertiary_600_'
@@ -141,21 +160,12 @@ const JobDetailsSheet: React.FC<JobDetailsSheetProps> = ({ college, isOpen, onCl
                     >
                         College Website
                     </button>
-                    {(college.isHiring || college.openings.length > 0) && (
-                        <button
-                            onClick={() => setActiveTab('jobs')}
-                            className={`py-spacing_lg px-spacing_xl text-text-sm-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === 'jobs' ? 'border-colors_border_border_brand_solid text-colors_text_text_primary_900_' : 'border-transparent text-colors_text_text_tertiary_600_'
-                                }`}
-                        >
-                            Jobs {college.openings.length > 0 ? `(${college.openings.length})` : ''}
-                        </button>
-                    )}
                 </div>
 
                 <div className="p-spacing_3xl">
                     <div className={activeTab === 'jobs' ? 'block' : 'hidden'}>
                         <div className="space-y-spacing_xl">
-                            {college.openings.length === 0 ? (
+                            {(college.manualHiringPosts || []).length === 0 ? (
                                 <div className="text-center py-spacing_6xl rounded-radius_md border border-dashed border-colors_border_border_secondary bg-colors_background_bg_secondary">
                                     <p className="text-text-sm-medium text-colors_text_text_secondary_700_">
                                         {college.isHiring ? 'This college is currently hiring' : 'No current openings listed'}
@@ -165,47 +175,122 @@ const JobDetailsSheet: React.FC<JobDetailsSheetProps> = ({ college, isOpen, onCl
                                     </p>
                                 </div>
                             ) : (
-                                college.openings.map(job => (
-                                    <div key={job.id} className="border border-colors_border_border_secondary rounded-radius_md overflow-hidden transition-colors">
-                                        <div
-                                            className="p-spacing_2xl cursor-pointer bg-colors_background_bg_secondary hover:bg-colors_background_bg_active"
-                                            onClick={() => setSelectedJob(selectedJob?.id === job.id ? null : job)}
-                                        >
-                                            <div className="flex justify-between items-start mb-spacing_lg">
-                                                <h3 className="text-text-sm-semibold text-colors_text_text_primary_900_">{job.title}</h3>
-                                                {selectedJob?.id === job.id ? <div className="h-spacing_sm w-spacing_sm rounded-full bg-colors_background_bg_brand_solid mt-spacing_md flex-shrink-0" /> : <ChevronRight size={16} className="text-colors_text_text_tertiary_600_ mt-spacing_xs flex-shrink-0" />}
-                                            </div>
-                                            <div className="flex items-center gap-spacing_xl text-text-xs-regular text-colors_text_text_secondary_700_">
-                                                <span className="flex items-center gap-spacing_sm"><Clock size={12} /> Deadline: {job.deadline}</span>
-                                                <span className="px-spacing_md py-spacing_xxs rounded-radius_full border border-colors_border_border_secondary bg-colors_background_bg_primary">{job.type}</span>
-                                            </div>
-                                        </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-spacing_lg">
+                                    {(college.manualHiringPosts || []).map(post => {
+                                        const isActive = isHiringPostActive(post.lastDateToApply);
+                                        const formatDate = (dateStr: string) => {
+                                            const date = new Date(dateStr);
+                                            return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+                                        };
 
-                                        {selectedJob?.id === job.id && (
-                                            <div className="p-spacing_2xl border-t border-colors_border_border_secondary bg-colors_background_bg_primary">
-                                                <div className="mb-spacing_2xl">
-                                                    <h4 className="text-[11px] font-bold uppercase tracking-wider mb-spacing_md text-colors_text_text_tertiary_600_">Description</h4>
-                                                    <p className="text-text-sm-regular leading-relaxed text-colors_text_text_secondary_700_">{job.description}</p>
-                                                </div>
-                                                <div className="mb-spacing_3xl">
-                                                    <h4 className="text-[11px] font-bold uppercase tracking-wider mb-spacing_md text-colors_text_text_tertiary_600_">Requirements</h4>
-                                                    <ul className="list-disc list-inside text-text-sm-regular leading-relaxed text-colors_text_text_secondary_700_ space-y-spacing_xs">
-                                                        {job.requirements.map((req, i) => <li key={i}>{req}</li>)}
-                                                    </ul>
+                                        return (
+                                            <div key={post.id} className="border border-colors_border_border_secondary rounded-radius_md overflow-hidden h-full flex flex-col">
+                                                <div className="p-spacing_2xl bg-colors_background_bg_secondary flex-1">
+                                                    <div className="flex justify-between items-start mb-spacing_lg">
+                                                        <div className="flex-1 pr-spacing_lg">
+                                                            <h3 className="text-text-md-semibold text-colors_text_text_primary_900_">
+                                                                {post.positionName}
+                                                            </h3>
+                                                        </div>
+                                                        <div className="flex-shrink-0">
+                                                            {!isActive && (
+                                                                <span className="px-spacing_md py-spacing_xxs rounded-radius_full text-text-xs-medium bg-red-100 text-red-700 border border-red-200">
+                                                                    Not hiring anymore
+                                                                </span>
+                                                            )}
+                                                            {isActive && (
+                                                                <span className="px-spacing_md py-spacing_xxs rounded-radius_full text-text-xs-medium bg-green-100 text-green-700 border border-green-200">
+                                                                    Active
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-spacing_md text-text-xs-regular text-colors_text_text_secondary_700_">
+                                                        <div className="flex items-center gap-spacing_sm">
+                                                            <Clock size={12} className="text-colors_text_text_tertiary_600_" />
+                                                            <span>Posted: {formatDate(post.postingDate)}</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-spacing_sm">
+                                                            <Clock size={12} className="text-colors_text_text_tertiary_600_" />
+                                                            <span>Deadline: {formatDate(post.lastDateToApply)}</span>
+                                                        </div>
+                                                    </div>
                                                 </div>
 
-                                                <a
-                                                    href={college.careerPageUrl || college.website}
-                                                    target="_blank"
-                                                    rel="noreferrer"
-                                                    className="w-full mt-spacing_2xl py-spacing_lg rounded-radius_md text-text-sm-semibold bg-component_colors_components_buttons_primary_button_primary_bg text-component_colors_components_buttons_primary_button_primary_fg flex items-center justify-center gap-spacing_md hover:opacity-90"
-                                                >
-                                                    Apply via official portal <ExternalLink size={14} />
-                                                </a>
+                                                <div className="p-spacing_2xl border-t border-colors_border_border_secondary bg-colors_background_bg_primary">
+                                                    <div className="mb-spacing_2xl">
+                                                        <h4 className="text-[11px] font-bold uppercase tracking-wider mb-spacing_md text-colors_text_text_tertiary_600_">
+                                                            Application Medium
+                                                        </h4>
+                                                        <p className="text-text-md-regular leading-relaxed text-colors_text_text_secondary_700_ whitespace-pre-wrap">
+                                                            {post.applicationMedium}
+                                                        </p>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-spacing_2xl mb-spacing_2xl">
+                                                        <div>
+                                                            <h4 className="text-[11px] font-bold uppercase tracking-wider mb-spacing_md text-colors_text_text_tertiary_600_">
+                                                                Salary
+                                                            </h4>
+                                                            <p className="text-text-md-regular text-colors_text_text_secondary_700_">
+                                                                {post.salary}
+                                                            </p>
+                                                        </div>
+
+                                                        {post.hasApplicationFee && post.applicationFee && (
+                                                            <div>
+                                                                <h4 className="text-[11px] font-bold uppercase tracking-wider mb-spacing_md text-colors_text_text_tertiary_600_">
+                                                                    Application Fee
+                                                                </h4>
+                                                                <p className="text-text-md-regular text-colors_text_text_secondary_700_">
+                                                                    {post.applicationFee}
+                                                                </p>
+                                                            </div>
+                                                        )}
+
+                                                        {post.hasEmail && post.emailId && (
+                                                            <div>
+                                                                <h4 className="text-[11px] font-bold uppercase tracking-wider mb-spacing_md text-colors_text_text_tertiary_600_">
+                                                                    Email
+                                                                </h4>
+                                                                <a
+                                                                    href={`mailto:${post.emailId}`}
+                                                                    className="text-text-md-regular text-colors_text_text_brand_primary_600_ hover:text-colors_text_text_brand_primary_800_ flex items-center gap-spacing_sm transition-colors"
+                                                                >
+                                                                    <Mail size={14} />
+                                                                    {post.emailId}
+                                                                </a>
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    {post.hasAdvertisement && post.advertisementLink && (
+                                                        <a
+                                                            href={post.advertisementLink}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            className="w-full py-spacing_lg rounded-radius_md text-text-sm-semibold bg-colors_background_bg_secondary text-colors_text_text_primary_900_ border border-colors_border_border_secondary flex items-center justify-center gap-spacing_md hover:bg-colors_background_bg_tertiary transition-colors mb-spacing_md"
+                                                        >
+                                                            <FileText size={14} />
+                                                            View Advertisement
+                                                        </a>
+                                                    )}
+
+                                                    {post.hasEmail && post.emailId && (
+                                                        <a
+                                                            href={`mailto:${post.emailId}`}
+                                                            className="w-full py-spacing_lg rounded-radius_md text-text-sm-semibold bg-component_colors_components_buttons_primary_button_primary_bg text-component_colors_components_buttons_primary_button_primary_fg flex items-center justify-center gap-spacing_md hover:opacity-90"
+                                                        >
+                                                            <Mail size={14} />
+                                                            Apply via Email
+                                                        </a>
+                                                    )}
+                                                </div>
                                             </div>
-                                        )}
-                                    </div>
-                                ))
+                                        );
+                                    })}
+                                </div>
                             )}
                         </div>
                     </div>

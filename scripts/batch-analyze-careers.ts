@@ -137,8 +137,6 @@ async function main() {
             .upsert(results.map(r => ({
                 id: r.id,
                 is_hiring: r.is_hiring,
-                confidence_score: r.confidence_score,
-                analysis_reason: r.analysis_reason,
                 last_checked: r.last_checked,
                 error_log: r.error_log
             })));

@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { fetchColleges, fetchCollegesInBounds } from './services/collegeService';
 import { CollegeType, College } from './types';
@@ -8,12 +9,26 @@ import JobDetailsSheet from './components/JobDetailsSheet';
 import CollegeDetailsManager from './components/CollegeDetailsManager';
 import ClusterDrawer from './components/ClusterDrawer';
 import ThemeToggle from './components/ThemeToggle';
+import AdminAuth from './components/AdminAuth';
+import HiringPostManager from './components/HiringPostManager';
 import { Search, Map as MapIcon, List as ListIcon, X, AlertTriangle, ChevronDown, Plus, Minus, Compass, ArrowUp } from 'lucide-react';
 
 const DEFAULT_CENTER: [number, number] = [21.7679, 78.8718];
 const DEFAULT_ZOOM = 5;
 
 const App: React.FC = () => {
+  // Check if we're on the admin route
+  const isAdminRoute = window.location.pathname === '/admin/hiring-manager' ||
+    window.location.hash === '#/admin/hiring-manager';
+
+  // If admin route, render admin interface
+  if (isAdminRoute) {
+    return (
+      <AdminAuth>
+        <HiringPostManager />
+      </AdminAuth>
+    );
+  }
   // Theme State
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
@@ -200,8 +215,30 @@ const App: React.FC = () => {
   }, [colleges, searchQuery, filterType, hiringFilter]);
 
 
+  // Browser Back Button Sync
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      if (event.state && event.state.collegeId) {
+        setSelectedCollegeId(event.state.collegeId);
+        setIsClusterDrawerOpen(false); // Ensure drawer is closed if navigating to a college
+      } else {
+        setSelectedCollegeId(null);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   const handleCollegeSelect = (id: string) => {
     const college = colleges.find(c => c.id === id);
+    if (!college) return;
+
+    // Push state only if selecting a new college
+    if (selectedCollegeId !== id) {
+      window.history.pushState({ collegeId: id }, '', `#college-${id}`);
+    }
+
     setSelectedCollegeId(id);
 
     // Only close cluster drawer if the selected college is NOT in the current cluster list.
@@ -480,7 +517,15 @@ const App: React.FC = () => {
       <CollegeDetailsManager
         colleges={colleges}
         selectedCollegeId={selectedCollegeId}
-        onClose={() => setSelectedCollegeId(null)}
+        onClose={() => {
+          // If state exists (we pushed it), go back.
+          // Fallback to setting null if history length is minimal or state is missing (defensive)
+          if (window.history.state?.collegeId) {
+            window.history.back();
+          } else {
+            setSelectedCollegeId(null);
+          }
+        }}
       />
 
       {/* DB Status Notification */}
