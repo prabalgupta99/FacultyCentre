@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { College, Job, isHiringPostActive } from '../types';
-import { ChevronRight, Clock, MapPin, ExternalLink, Globe, ArrowLeft, AlertCircle, Mail, FileText } from 'lucide-react';
+import { ChevronRight, Clock, MapPin, ExternalLink, Globe, ArrowLeft, AlertCircle, Mail, FileText, Check } from 'lucide-react';
 import { checkIframeCompatibility } from '../services/collegeService';
 
 interface JobDetailsSheetProps {
@@ -12,6 +12,7 @@ interface JobDetailsSheetProps {
 
 const JobDetailsSheet: React.FC<JobDetailsSheetProps> = ({ college, isOpen, onClose }) => {
     const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+    const [copiedEmailPostId, setCopiedEmailPostId] = useState<number | null>(null);
 
     // Calculate active manual posts count
     const activeManualPosts = (college.manualHiringPosts || []).filter(post =>
@@ -219,31 +220,31 @@ const JobDetailsSheet: React.FC<JobDetailsSheetProps> = ({ college, isOpen, onCl
                                                 </div>
 
                                                 <div className="p-spacing_2xl border-t border-colors_border_border_secondary bg-colors_background_bg_primary">
-                                                    <div className="mb-spacing_2xl">
-                                                        <h4 className="text-[11px] font-bold uppercase tracking-wider mb-spacing_md text-colors_text_text_tertiary_600_">
-                                                            Application Medium
-                                                        </h4>
-                                                        <p className="text-text-md-regular leading-relaxed text-colors_text_text_secondary_700_ whitespace-pre-wrap">
-                                                            {post.applicationMedium}
-                                                        </p>
-                                                    </div>
-
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-spacing_2xl mb-spacing_2xl">
+                                                    <div className="flex flex-col gap-spacing_3xl">
                                                         <div>
-                                                            <h4 className="text-[11px] font-bold uppercase tracking-wider mb-spacing_md text-colors_text_text_tertiary_600_">
+                                                            <h4 className="text-[11px] font-bold uppercase tracking-wider mb-spacing_sm text-colors_text_text_tertiary_600_">
+                                                                Application Medium
+                                                            </h4>
+                                                            <p className="text-text-sm-regular leading-relaxed text-colors_text_text_secondary_700_ whitespace-pre-wrap">
+                                                                {post.applicationMedium}
+                                                            </p>
+                                                        </div>
+
+                                                        <div>
+                                                            <h4 className="text-[11px] font-bold uppercase tracking-wider mb-spacing_sm text-colors_text_text_tertiary_600_">
                                                                 Salary
                                                             </h4>
-                                                            <p className="text-text-md-regular text-colors_text_text_secondary_700_">
+                                                            <p className="text-text-sm-regular text-colors_text_text_secondary_700_">
                                                                 {post.salary}
                                                             </p>
                                                         </div>
 
                                                         {post.hasApplicationFee && post.applicationFee && (
                                                             <div>
-                                                                <h4 className="text-[11px] font-bold uppercase tracking-wider mb-spacing_md text-colors_text_text_tertiary_600_">
+                                                                <h4 className="text-[11px] font-bold uppercase tracking-wider mb-spacing_sm text-colors_text_text_tertiary_600_">
                                                                     Application Fee
                                                                 </h4>
-                                                                <p className="text-text-md-regular text-colors_text_text_secondary_700_">
+                                                                <p className="text-text-sm-regular text-colors_text_text_secondary_700_">
                                                                     {post.applicationFee}
                                                                 </p>
                                                             </div>
@@ -251,41 +252,58 @@ const JobDetailsSheet: React.FC<JobDetailsSheetProps> = ({ college, isOpen, onCl
 
                                                         {post.hasEmail && post.emailId && (
                                                             <div>
-                                                                <h4 className="text-[11px] font-bold uppercase tracking-wider mb-spacing_md text-colors_text_text_tertiary_600_">
+                                                                <h4 className="text-[11px] font-bold uppercase tracking-wider mb-spacing_sm text-colors_text_text_tertiary_600_">
                                                                     Email
                                                                 </h4>
                                                                 <a
                                                                     href={`mailto:${post.emailId}`}
-                                                                    className="text-text-md-regular text-colors_text_text_brand_primary_600_ hover:text-colors_text_text_brand_primary_800_ flex items-center gap-spacing_sm transition-colors"
+                                                                    className="text-text-sm-regular text-colors_text_text_brand_primary_600_ hover:text-colors_text_text_brand_primary_800_ flex items-center gap-spacing_sm transition-colors"
                                                                 >
                                                                     <Mail size={14} />
                                                                     {post.emailId}
                                                                 </a>
                                                             </div>
                                                         )}
+
+                                                        {post.hasAdvertisement && post.advertisementLink && (
+                                                            <a
+                                                                href={post.advertisementLink}
+                                                                target="_blank"
+                                                                rel="noreferrer"
+                                                                className="w-full py-spacing_lg rounded-radius_md text-text-sm-semibold bg-colors_background_bg_secondary text-colors_text_text_primary_900_ border border-colors_border_border_secondary flex items-center justify-center gap-spacing_md hover:bg-colors_background_bg_tertiary transition-colors"
+                                                            >
+                                                                <FileText size={14} />
+                                                                View Advertisement
+                                                            </a>
+                                                        )}
+
+                                                        {post.hasEmail && post.emailId && (
+                                                            <a
+                                                                href={`mailto:${post.emailId}`}
+                                                                onClick={(e) => {
+                                                                    navigator.clipboard.writeText(post.emailId!);
+                                                                    setCopiedEmailPostId(post.id);
+                                                                    setTimeout(() => setCopiedEmailPostId(null), 2000);
+                                                                }}
+                                                                className={`w-full py-spacing_lg rounded-radius_md text-text-sm-semibold flex items-center justify-center gap-spacing_md transition-all ${copiedEmailPostId === post.id
+                                                                    ? 'bg-green-100 text-green-700 border border-green-200'
+                                                                    : 'bg-component_colors_components_buttons_primary_button_primary_bg text-component_colors_components_buttons_primary_button_primary_fg hover:opacity-90'
+                                                                    }`}
+                                                            >
+                                                                {copiedEmailPostId === post.id ? (
+                                                                    <>
+                                                                        <Check size={14} />
+                                                                        Email Copied & Opened
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        <Mail size={14} />
+                                                                        Apply via Email
+                                                                    </>
+                                                                )}
+                                                            </a>
+                                                        )}
                                                     </div>
-
-                                                    {post.hasAdvertisement && post.advertisementLink && (
-                                                        <a
-                                                            href={post.advertisementLink}
-                                                            target="_blank"
-                                                            rel="noreferrer"
-                                                            className="w-full py-spacing_lg rounded-radius_md text-text-sm-semibold bg-colors_background_bg_secondary text-colors_text_text_primary_900_ border border-colors_border_border_secondary flex items-center justify-center gap-spacing_md hover:bg-colors_background_bg_tertiary transition-colors mb-spacing_md"
-                                                        >
-                                                            <FileText size={14} />
-                                                            View Advertisement
-                                                        </a>
-                                                    )}
-
-                                                    {post.hasEmail && post.emailId && (
-                                                        <a
-                                                            href={`mailto:${post.emailId}`}
-                                                            className="w-full py-spacing_lg rounded-radius_md text-text-sm-semibold bg-component_colors_components_buttons_primary_button_primary_bg text-component_colors_components_buttons_primary_button_primary_fg flex items-center justify-center gap-spacing_md hover:opacity-90"
-                                                        >
-                                                            <Mail size={14} />
-                                                            Apply via Email
-                                                        </a>
-                                                    )}
                                                 </div>
                                             </div>
                                         );

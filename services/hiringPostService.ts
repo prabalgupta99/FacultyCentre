@@ -144,10 +144,14 @@ export const createHiringPost = async (
 
         // Update college is_hiring status
         if (data) {
-            await supabase
+            const { error: updateError } = await supabase
                 .from('colleges')
-                .update({ is_hiring: true, updated_at: new Date().toISOString() })
+                .update({ is_hiring: true, last_checked: new Date().toISOString() })
                 .eq('id', post.collegeId);
+
+            if (updateError) {
+                console.error('Failed to update college hiring status (create):', updateError);
+            }
         }
 
         return {
@@ -198,10 +202,16 @@ export const updateHiringPost = async (
 
         // Update college is_hiring status
         if (data) {
-            await supabase
+            const { error: updateError } = await supabase
                 .from('colleges')
-                .update({ is_hiring: true, updated_at: new Date().toISOString() })
+                .update({ is_hiring: true, last_checked: new Date().toISOString() })
                 .eq('id', data.college_id);
+
+            if (updateError) {
+                console.error('Failed to update college hiring status:', updateError);
+                // We don't throw here to avoid failing the post update if only the status sync fails,
+                // but we log it. Could optionally return a warning.
+            }
         }
 
         return {
@@ -356,10 +366,14 @@ export const createMultipleHiringPosts = async (
 
         // Update college is_hiring status
         if (data && data.length > 0) {
-            await supabase
+            const { error: updateError } = await supabase
                 .from('colleges')
-                .update({ is_hiring: true, updated_at: new Date().toISOString() })
+                .update({ is_hiring: true, last_checked: new Date().toISOString() })
                 .eq('id', postData.collegeId);
+
+            if (updateError) {
+                console.error('Failed to update college hiring status (batch create):', updateError);
+            }
         }
 
         return {

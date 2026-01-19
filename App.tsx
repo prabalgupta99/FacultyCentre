@@ -215,12 +215,17 @@ const App: React.FC = () => {
   }, [colleges, searchQuery, filterType, hiringFilter]);
 
 
-  // Browser Back Button Sync
+  // Browser Back Button Sync & Deep Linking
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
       if (event.state && event.state.collegeId) {
         setSelectedCollegeId(event.state.collegeId);
         setIsClusterDrawerOpen(false); // Ensure drawer is closed if navigating to a college
+      } else if (window.location.hash.startsWith('#college-')) {
+        // Fallback for manual hash changes or refreshes where state is lost
+        const id = window.location.hash.replace('#college-', '');
+        setSelectedCollegeId(id);
+        setIsClusterDrawerOpen(false);
       } else {
         setSelectedCollegeId(null);
       }
@@ -229,6 +234,16 @@ const App: React.FC = () => {
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
+
+  // Sync Initial URL Hash with Colleges (once loaded)
+  useEffect(() => {
+    if (!selectedCollegeId && colleges.length > 0 && window.location.hash.startsWith('#college-')) {
+      const id = window.location.hash.replace('#college-', '');
+      if (colleges.some(c => c.id === id)) {
+        setSelectedCollegeId(id);
+      }
+    }
+  }, [colleges]);
 
   const handleCollegeSelect = (id: string) => {
     const college = colleges.find(c => c.id === id);
@@ -519,11 +534,12 @@ const App: React.FC = () => {
         selectedCollegeId={selectedCollegeId}
         onClose={() => {
           // If state exists (we pushed it), go back.
-          // Fallback to setting null if history length is minimal or state is missing (defensive)
           if (window.history.state?.collegeId) {
             window.history.back();
           } else {
+            // Fallback: Clear/Replace state directly if we didn't push it (e.g. direct load)
             setSelectedCollegeId(null);
+            window.history.replaceState(null, '', window.location.pathname + window.location.search);
           }
         }}
       />
