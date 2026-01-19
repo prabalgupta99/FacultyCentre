@@ -118,6 +118,24 @@ async function main() {
         return;
     }
 
+    // Fetch colleges with ACTIVE manual hiring posts
+    console.log('📥 Checking for active manual hiring posts...');
+    const now = new Date().toISOString().split('T')[0];
+    const { data: manualPosts, error: manualError } = await supabase
+        .from('manual_hiring_posts')
+        .select('college_id')
+        .gte('last_date_to_apply', now);
+
+    if (manualError) {
+        console.error('❌ Error fetching manual posts:', manualError.message);
+        // We continue, but manual posts won't be protected (safer to exit?)
+        // Let's exit to be safe
+        process.exit(1);
+    }
+
+    const manualHiringCollegeIds = new Set(manualPosts?.map(p => p.college_id) || []);
+    console.log(`✅ Found ${manualHiringCollegeIds.size} colleges with active manual posts`);
+
     // Process with concurrency control
     const limit = pLimit(CONCURRENCY_LIMIT);
     let processed = 0;
@@ -132,14 +150,26 @@ async function main() {
         const results = await Promise.all(chunkTasks);
 
         // Update database in batch
-        const { error: updateError } = await supabase
-            .from(TABLE_NAME)
-            .upsert(results.map(r => ({
+        // Crucial: Override is_hiring if college has active manual posts
+        const updates = results.map(r => {
+            const hasManualPost = manualHiringCollegeIds.has(r.id);
+            const finalIsHiring = r.is_hiring || hasManualPost;
+
+            // If overridden by manual post, we might want to note it, but we can't update 'analysis_reason' easily here.
+            // Just ensuring is_hiring=true is enough.
+
+            return {
                 id: r.id,
-                is_hiring: r.is_hiring,
+                is_hiring: finalIsHiring,
+                scraped_is_hiring: r.is_hiring, // Keep track of scraper result separately
                 last_checked: r.last_checked,
                 error_log: r.error_log
-            })));
+            };
+        });
+
+        const { error: updateError } = await supabase
+            .from(TABLE_NAME)
+            .upsert(updates);
 
         if (updateError) {
             console.error('❌ Batch update error:', updateError.message);
