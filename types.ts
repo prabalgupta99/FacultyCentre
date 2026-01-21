@@ -36,6 +36,7 @@ export interface ManualHiringPost {
 
 export interface College {
   id: string;
+  slug: string; // URL Slug (e.g. iit-delhi-123)
   name: string;
   location: string;
   state: string;

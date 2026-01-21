@@ -3,6 +3,7 @@ import { College, CollegeType } from './types';
 export const COLLEGES: College[] = [
   {
     id: '1',
+    slug: 'national-law-school-of-india-university-nlsiu-1',
     name: 'National Law School of India University (NLSIU)',
     location: 'Bengaluru',
     state: 'Karnataka',
@@ -40,6 +41,7 @@ export const COLLEGES: College[] = [
   },
   {
     id: '2',
+    slug: 'nalsar-university-of-law-2',
     name: 'NALSAR University of Law',
     location: 'Hyderabad',
     state: 'Telangana',
@@ -67,6 +69,7 @@ export const COLLEGES: College[] = [
   },
   {
     id: '3',
+    slug: 'symbiosis-law-school-3',
     name: 'Symbiosis Law School',
     location: 'Pune',
     state: 'Maharashtra',
@@ -83,6 +86,7 @@ export const COLLEGES: College[] = [
   },
   {
     id: '4',
+    slug: 'national-law-university-delhi-4',
     name: 'National Law University, Delhi',
     location: 'New Delhi',
     state: 'Delhi',
@@ -110,6 +114,7 @@ export const COLLEGES: College[] = [
   },
   {
     id: '5',
+    slug: 'jindal-global-law-school-5',
     name: 'Jindal Global Law School',
     location: 'Sonipat',
     state: 'Haryana',
@@ -137,6 +142,7 @@ export const COLLEGES: College[] = [
   },
   {
     id: '6',
+    slug: 'west-bengal-national-university-of-juridical-sciences-6',
     name: 'West Bengal National University of Juridical Sciences',
     location: 'Kolkata',
     state: 'West Bengal',

@@ -28,6 +28,7 @@ export const fetchColleges = async (): Promise<{ data: College[]; error: string 
     // 2. Map DB structure to App structure
     const mappedColleges: College[] = collegesData.map((row: any) => ({
       id: row.id.toString(),
+      slug: row.slug || `college-${row.id}`,
       name: row.college_name_place || 'Unknown College',
       location: row.college_name_place || 'Unknown Location',
       state: row.state || '',
@@ -140,6 +141,7 @@ export const fetchCollegesInBounds = async (
 
     const mappedColleges: College[] = collegesData.map((row: any) => ({
       id: row.id.toString(),
+      slug: row.slug || `college-${row.id}`,
       name: row.college_name_place || 'Unknown College',
       location: row.college_name_place || 'Unknown Location',
       state: row.state || '',
