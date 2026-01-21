@@ -82,7 +82,7 @@ const MainView: React.FC = () => {
       };
 
       const filterOptions = {
-        search: searchQuery,
+        // search: searchQuery, // Removed to use client-side filtering (better for multi-word + university search)
         isHiring: hiringFilter === 'yes' ? true : undefined
       };
 
@@ -104,7 +104,7 @@ const MainView: React.FC = () => {
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [mapBounds, searchQuery, hiringFilter]); // Re-fetch when map moves or filters change
+  }, [mapBounds, hiringFilter]); // Re-fetch when map moves or filters change (removed searchQuery)
 
   // Map Bounds Handler
   const handleBoundsChange = (bounds: { minLat: number; maxLat: number; minLng: number; maxLng: number }) => {
@@ -179,8 +179,20 @@ const MainView: React.FC = () => {
   // Filter Logic
   const filteredColleges = useMemo(() => {
     return colleges.filter(college => {
-      const matchesSearch = college.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        college.location.toLowerCase().includes(searchQuery.toLowerCase());
+
+      // Multi-word search logic (Ported from Hiring Management System)
+      // 1. Split query into words
+      const searchTerms = searchQuery.toLowerCase().trim().split(/\s+/).filter(term => term.length > 0);
+
+      // 2. Start true, then check if EVERY word matches at least one field
+      const matchesSearch = searchTerms.length === 0 || searchTerms.every(term => {
+        const nameMatch = college.name.toLowerCase().includes(term);
+        const locationMatch = college.location.toLowerCase().includes(term);
+        const universityMatch = college.affiliatingUniversity ? college.affiliatingUniversity.toLowerCase().includes(term) : false;
+
+        return nameMatch || locationMatch || universityMatch;
+      });
+
       const matchesType = filterType === 'ALL' || college.type === filterType;
 
       let matchesHiring = true;
@@ -367,7 +379,7 @@ const MainView: React.FC = () => {
   }
 
   return (
-    <div className="h-screen w-full flex flex-col overflow-hidden relative transition-colors duration-300 bg-colors_background_bg_primary text-colors_text_text_primary_900_">
+    <div className="h-[100dvh] w-full flex flex-col overflow-hidden relative transition-colors duration-300 bg-colors_background_bg_primary text-colors_text_text_primary_900_">
 
       {/* 
         ---------------------------
@@ -456,7 +468,7 @@ const MainView: React.FC = () => {
       </div>
 
       {/* 2.5 Recentre Button */}
-      <div className={`absolute bottom-spacing_xl left-1/2 transform -translate-x-1/2 z-[400] transition-opacity duration-300 ${showRecenter && !isListViewOpen && controlsVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'} hidden md:block`}>
+      <div className={`fixed bottom-spacing_xl left-1/2 transform -translate-x-1/2 z-[400] transition-opacity duration-300 ${showRecenter && !isListViewOpen && controlsVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'} hidden md:block`}>
         <button
           onClick={handleRecenter}
           className="flex items-center gap-spacing_md px-spacing_xl h-spacing_5xl rounded-radius_full shadow-shadow_floating text-text-sm-medium transition-transform hover:scale-105 active:scale-95 border border-colors_border_border_secondary bg-colors_background_bg_secondary text-colors_text_text_primary_900_ whitespace-nowrap"
@@ -467,7 +479,7 @@ const MainView: React.FC = () => {
       </div>
 
       {/* 3. List/Map Toggle Button */}
-      <div className={`absolute bottom-spacing_xl left-spacing_xl z-[501] transition-opacity duration-300 ${controlsOpacityClass}`}>
+      <div className={`fixed bottom-spacing_xl left-spacing_xl z-[501] transition-opacity duration-300 ${controlsOpacityClass}`}>
         <button
           onClick={() => {
             setIsListViewOpen(!isListViewOpen);
@@ -488,7 +500,7 @@ const MainView: React.FC = () => {
       )}
 
       {/* 4. Bottom Right Controls Group */}
-      <div className={`absolute bottom-spacing_xl right-spacing_xl z-[400] flex flex-col items-center transition-all duration-300 ease-in-out ${controlsOpacityClass}`}>
+      <div className={`fixed bottom-spacing_xl right-spacing_xl z-[400] flex flex-col items-center transition-all duration-300 ease-in-out ${controlsOpacityClass}`}>
         {/* Back To Top */}
         <div className={`transition-all duration-300 ease-in-out overflow-hidden p-spacing_xs ${isScrolled && isListViewOpen ? 'max-h-[60px] opacity-100' : 'max-h-0 opacity-0'}`}>
           <button

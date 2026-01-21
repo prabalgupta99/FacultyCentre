@@ -762,6 +762,16 @@
       line-height: 1.2;
     }
 
+    /* Fix for Dark Mode Map Text Legibility: Force Dark Text on Light Map */
+    [data-theme='dark'] .marker-text {
+      color: var(--colors_base_white) !important;
+      text-shadow:
+        -1px -1px 0 var(--colors_gray_light_mode_700),
+        1px -1px 0 var(--colors_gray_light_mode_700),
+        -1px 1px 0 var(--colors_gray_light_mode_700),
+        1px 1px 0 var(--colors_gray_light_mode_700) !important;
+    }
+
     @keyframes breathe {
 
       0%,
@@ -795,7 +805,7 @@
       }
     }
     </script>
-  <link rel="stylesheet" href="/index.css">
+
 </head>
 
 <body>
