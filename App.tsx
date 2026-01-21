@@ -10,7 +10,7 @@ import CollegeDetailsManager from './components/CollegeDetailsManager';
 import ClusterDrawer from './components/ClusterDrawer';
 import ThemeToggle from './components/ThemeToggle';
 import AdminAuth from './components/AdminAuth';
-import HiringPostManager from './components/HiringPostManager';
+import AdminDashboard from './components/AdminDashboard';
 import { Search, Map as MapIcon, List as ListIcon, X, AlertTriangle, ChevronDown, Plus, Minus, Compass, ArrowUp } from 'lucide-react';
 
 const DEFAULT_CENTER: [number, number] = [21.7679, 78.8718];
@@ -21,11 +21,11 @@ const App: React.FC = () => {
   const isAdminRoute = window.location.pathname === '/admin/hiring-manager' ||
     window.location.hash.startsWith('#/admin/hiring-manager');
 
-  // If admin route, render admin interface
+  // If admin route, render admin interface with logout callback
   if (isAdminRoute) {
     return (
       <AdminAuth>
-        <HiringPostManager />
+        {(onLogout: () => void) => <AdminDashboard onLogout={onLogout} />}
       </AdminAuth>
     );
   }
@@ -194,10 +194,11 @@ const App: React.FC = () => {
       const matchesType = filterType === 'ALL' || college.type === filterType;
 
       let matchesHiring = true;
+      const hasManualPosts = college.manualHiringPosts && college.manualHiringPosts.length > 0;
       if (hiringFilter === 'yes') {
-        matchesHiring = college.isHiring || college.openings.length > 0;
+        matchesHiring = college.isHiring || college.openings.length > 0 || hasManualPosts;
       } else if (hiringFilter === 'no') {
-        matchesHiring = !college.isHiring && college.openings.length === 0;
+        matchesHiring = !college.isHiring && college.openings.length === 0 && !hasManualPosts;
       }
 
       return matchesSearch && matchesType && matchesHiring;

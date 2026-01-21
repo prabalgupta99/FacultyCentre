@@ -27,6 +27,7 @@ export interface CollegeSearchResult {
     id: number;
     college_name_place: string;
     state: string;
+    affiliating_university: string;
 }
 
 // New college creation type
@@ -41,6 +42,19 @@ export interface NewCollege {
     latitude?: number;
     longitude?: number;
     careerAtCollege?: string;
+}
+
+// College details type for editing existing colleges
+export interface CollegeDetails {
+    id: number;
+    collegeNamePlace: string;  // Combined field as stored in DB
+    state: string;
+    type: 'Govt.' | 'Private';
+    affiliatingUniversity: string;
+    careerPageUrl: string;
+    collegeWebsiteUrl: string;
+    latitude: number;
+    longitude: number;
 }
 
 // Helper to convert DB row to app type
@@ -240,12 +254,45 @@ export const updateHiringPost = async (
  */
 export const deleteHiringPost = async (id: number): Promise<{ success: boolean; error: string | null }> => {
     try {
+        // First, get the college_id of the post we're about to delete
+        const { data: postData, error: fetchError } = await supabase
+            .from('manual_hiring_posts')
+            .select('college_id')
+            .eq('id', id)
+            .single();
+
+        if (fetchError) throw fetchError;
+
+        const collegeId = postData?.college_id;
+
+        // Delete the hiring post
         const { error } = await supabase
             .from('manual_hiring_posts')
             .delete()
             .eq('id', id);
 
         if (error) throw error;
+
+        // Check if there are any remaining active hiring posts for this college
+        if (collegeId) {
+            const today = new Date().toISOString().split('T')[0];
+            const { data: remainingPosts, error: countError } = await supabase
+                .from('manual_hiring_posts')
+                .select('id')
+                .eq('college_id', collegeId)
+                .gte('last_date_to_apply', today)
+                .limit(1);
+
+            if (!countError && (!remainingPosts || remainingPosts.length === 0)) {
+                // No more active hiring posts - set is_hiring to false
+                await supabase
+                    .from('colleges')
+                    .update({ is_hiring: false })
+                    .eq('id', collegeId);
+
+                console.log(`📝 College ${collegeId} is_hiring set to false (no more active posts)`);
+            }
+        }
 
         return {
             success: true,
@@ -261,7 +308,8 @@ export const deleteHiringPost = async (id: number): Promise<{ success: boolean; 
 };
 
 /**
- * Search colleges by name (for autocomplete)
+ * Search colleges by name, state, university, or ID (for autocomplete)
+ * Supports multi-word search: "school kerala" matches colleges with both words
  */
 export const searchColleges = async (query: string): Promise<{ data: CollegeSearchResult[]; error: string | null }> => {
     try {
@@ -269,16 +317,59 @@ export const searchColleges = async (query: string): Promise<{ data: CollegeSear
             return { data: [], error: null };
         }
 
-        const { data, error } = await supabase
+        const trimmedQuery = query.trim();
+
+        // If query is purely numeric, search by ID
+        if (/^\d+$/.test(trimmedQuery)) {
+            const { data, error } = await supabase
+                .from('colleges')
+                .select('id, college_name_place, state, affiliating_university')
+                .eq('id', parseInt(trimmedQuery, 10))
+                .limit(1);
+
+            if (error) throw error;
+            return { data: data || [], error: null };
+        }
+
+        // Split query into words for multi-word search
+        const words = trimmedQuery.toLowerCase().split(/\s+/).filter(w => w.length >= 2);
+
+        if (words.length === 0) {
+            return { data: [], error: null };
+        }
+
+        // For single word, use simple ILIKE
+        if (words.length === 1) {
+            const { data, error } = await supabase
+                .from('colleges')
+                .select('id, college_name_place, state, affiliating_university')
+                .or(`college_name_place.ilike.%${words[0]}%,state.ilike.%${words[0]}%,affiliating_university.ilike.%${words[0]}%`)
+                .order('id', { ascending: false })
+                .limit(50);
+
+            if (error) throw error;
+            return { data: data || [], error: null };
+        }
+
+        // For multiple words: fetch candidates matching first word, then filter client-side
+        // This is more efficient than complex SQL for most use cases
+        const { data: candidates, error } = await supabase
             .from('colleges')
-            .select('id, college_name_place, state')
-            .ilike('college_name_place', `%${query.trim()}%`)
-            .limit(10);
+            .select('id, college_name_place, state, affiliating_university')
+            .or(`college_name_place.ilike.%${words[0]}%,state.ilike.%${words[0]}%,affiliating_university.ilike.%${words[0]}%`)
+            .order('id', { ascending: false })
+            .limit(200);  // Fetch more to filter down
 
         if (error) throw error;
 
+        // Filter candidates - all words must appear in combined text
+        const filtered = (candidates || []).filter(college => {
+            const combinedText = `${college.college_name_place} ${college.state} ${college.affiliating_university}`.toLowerCase();
+            return words.every(word => combinedText.includes(word));
+        });
+
         return {
-            data: data || [],
+            data: filtered.slice(0, 50),  // Return max 50 results
             error: null
         };
     } catch (error: any) {
@@ -302,15 +393,146 @@ export const isPostActive = (lastDateToApply: string): boolean => {
 };
 
 /**
+ * Fetch full college details by ID for editing
+ */
+export const fetchCollegeById = async (id: number): Promise<{ data: CollegeDetails | null; error: string | null }> => {
+    try {
+        const { data, error } = await supabase
+            .from('colleges')
+            .select('id, college_name_place, state, type, affiliating_university, career_page_url, college_website_url, latitude, longitude')
+            .eq('id', id)
+            .single();
+
+        if (error) throw error;
+
+        if (!data) {
+            return { data: null, error: 'College not found' };
+        }
+
+        console.log('📥 Raw college data from DB:', data);
+
+        const processedData = {
+            id: data.id,
+            collegeNamePlace: data.college_name_place || '',
+            state: data.state || '',
+            type: (data.type as 'Govt.' | 'Private') || 'Private',
+            affiliatingUniversity: data.affiliating_university || '',
+            careerPageUrl: data.career_page_url || '',
+            collegeWebsiteUrl: data.college_website_url || '',
+            latitude: data.latitude || 0,
+            longitude: data.longitude || 0,
+        };
+
+        console.log('📤 Processed college data:', processedData);
+
+        return {
+            data: processedData,
+            error: null
+        };
+    } catch (error: any) {
+        console.error('Error fetching college:', error);
+        return {
+            data: null,
+            error: error.message || 'Failed to fetch college details'
+        };
+    }
+};
+
+/**
+ * Fetch paginated list of colleges for the college management list
+ * Optimized for 25 items per page for fast loading
+ */
+export const fetchCollegesPaginated = async (
+    page: number = 1,
+    pageSize: number = 25
+): Promise<{ data: CollegeSearchResult[]; total: number; error: string | null }> => {
+    try {
+        // Get total count first
+        const { count, error: countError } = await supabase
+            .from('colleges')
+            .select('*', { count: 'exact', head: true });
+
+        if (countError) throw countError;
+
+        // Calculate offset
+        const offset = (page - 1) * pageSize;
+
+        // Fetch paginated data
+        const { data, error } = await supabase
+            .from('colleges')
+            .select('id, college_name_place, state, affiliating_university')
+            .order('id', { ascending: false })  // Newest first
+            .range(offset, offset + pageSize - 1);
+
+        if (error) throw error;
+
+        return {
+            data: data || [],
+            total: count || 0,
+            error: null
+        };
+    } catch (error: any) {
+        console.error('Error fetching paginated colleges:', error);
+        return {
+            data: [],
+            total: 0,
+            error: error.message || 'Failed to fetch colleges'
+        };
+    }
+};
+
+/**
+ * Update an existing college's details
+ */
+export const updateCollege = async (id: number, college: Partial<CollegeDetails>): Promise<{ success: boolean; error: string | null }> => {
+    try {
+        const updateData: Record<string, any> = {};
+
+        if (college.collegeNamePlace !== undefined) updateData.college_name_place = college.collegeNamePlace;
+        if (college.state !== undefined) updateData.state = college.state;
+        if (college.type !== undefined) updateData.type = college.type;
+        if (college.affiliatingUniversity !== undefined) updateData.affiliating_university = college.affiliatingUniversity;
+        if (college.careerPageUrl !== undefined) updateData.career_page_url = college.careerPageUrl;
+        if (college.collegeWebsiteUrl !== undefined) updateData.college_website_url = college.collegeWebsiteUrl;
+        if (college.latitude !== undefined) updateData.latitude = college.latitude;
+        if (college.longitude !== undefined) updateData.longitude = college.longitude;
+
+        console.log('📝 Updating college ID:', id, 'with data:', updateData);
+
+        const { error } = await supabase
+            .from('colleges')
+            .update(updateData)
+            .eq('id', id);
+
+        if (error) throw error;
+
+        console.log('✅ College updated successfully!');
+
+        return { success: true, error: null };
+    } catch (error: any) {
+        console.error('Error updating college:', error);
+        return {
+            success: false,
+            error: error.message || 'Failed to update college'
+        };
+    }
+};
+
+/**
  * Create a new college in the database
  * Returns the newly created college ID
  */
 export const createCollege = async (college: NewCollege): Promise<{ data: number | null; error: string | null }> => {
     try {
+        // Combine college name with city to create the full college_name_place
+        const collegeNameWithPlace = college.city
+            ? `${college.collegeName}, ${college.city}, ${college.state}`
+            : college.collegeName;
+
         const { data, error } = await supabase
             .from('colleges')
             .insert({
-                college_name_place: college.collegeName,
+                college_name_place: collegeNameWithPlace,
                 state: college.state,
                 type: college.type,
                 affiliating_university: college.affiliatingUniversity,
@@ -319,7 +541,7 @@ export const createCollege = async (college: NewCollege): Promise<{ data: number
                 latitude: college.latitude || 0,
                 longitude: college.longitude || 0,
                 career_at_college: college.careerAtCollege || '',
-                is_hiring: false,
+                is_hiring: true, // Set to true immediately since we're adding a hiring post
                 last_checked: new Date().toISOString(),
                 error_log: ''
             })

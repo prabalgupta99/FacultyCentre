@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ManualHiringPost } from '../types';
-import { searchColleges, CollegeSearchResult, NewCollege, createCollege, createMultipleHiringPosts } from '../services/hiringPostService';
-import { X, Search, Calendar, Plus } from 'lucide-react';
+import { searchColleges, CollegeSearchResult, NewCollege, createCollege, createMultipleHiringPosts, CollegeDetails, fetchCollegeById, updateCollege } from '../services/hiringPostService';
+import { X, Search, Calendar, Plus, Loader2 } from 'lucide-react';
 
 interface HiringPostFormProps {
     initialData?: ManualHiringPost;
@@ -75,8 +75,16 @@ const HiringPostForm: React.FC<HiringPostFormProps> = ({
         affiliatingUniversity: '',
         city: '',
         careerPageUrl: '',
-        collegeWebsiteUrl: ''
+        collegeWebsiteUrl: '',
+        latitude: undefined,
+        longitude: undefined,
     });
+
+    // Edit existing college functionality
+    const [editCollegeEnabled, setEditCollegeEnabled] = useState(false);
+    const [collegeDetails, setCollegeDetails] = useState<CollegeDetails | null>(null);
+    const [isLoadingCollegeDetails, setIsLoadingCollegeDetails] = useState(false);
+    const [editedCollegeData, setEditedCollegeData] = useState<CollegeDetails | null>(null);
 
     const [formData, setFormData] = useState({
         positionName: initialData?.positionName || '',
@@ -112,12 +120,32 @@ const HiringPostForm: React.FC<HiringPostFormProps> = ({
         return () => clearTimeout(timer);
     }, [collegeQuery, collegeMode]);
 
+    // Fetch college details when edit mode is enabled
+    useEffect(() => {
+        if (editCollegeEnabled && collegeId > 0 && !collegeDetails) {
+            setIsLoadingCollegeDetails(true);
+            fetchCollegeById(collegeId).then(({ data, error }) => {
+                if (data) {
+                    setCollegeDetails(data);
+                    setEditedCollegeData(data);
+                } else if (error) {
+                    setErrors(prev => ({ ...prev, editCollege: error }));
+                }
+                setIsLoadingCollegeDetails(false);
+            });
+        }
+    }, [editCollegeEnabled, collegeId, collegeDetails]);
+
     const handleSelectCollege = (college: CollegeSearchResult) => {
         setCollegeId(college.id);
         setCollegeName(college.college_name_place);
         setCollegeQuery(college.college_name_place);
         setShowSuggestions(false);
-        setErrors({ ...errors, college: '' });
+        setErrors({ ...errors, college: '', editCollege: '' });
+        // Reset edit state when college changes
+        setEditCollegeEnabled(false);
+        setCollegeDetails(null);
+        setEditedCollegeData(null);
     };
 
     const addChipValue = (field: 'positionName' | 'applicationMedium' | 'salary' | 'applicationFee', value: string) => {
@@ -142,6 +170,13 @@ const HiringPostForm: React.FC<HiringPostFormProps> = ({
             if (!newCollegeData.state) newErrors.newState = 'State is required';
             if (!newCollegeData.affiliatingUniversity.trim()) newErrors.newAffiliatingUniversity = 'Affiliating university is required';
             if (!newCollegeData.city.trim()) newErrors.newCity = 'City is required';
+        }
+
+        // Validation for edit college mode
+        if (collegeMode === 'existing' && editCollegeEnabled && editedCollegeData) {
+            if (!editedCollegeData.collegeNamePlace.trim()) newErrors.editCollegeName = 'College name is required';
+            if (!editedCollegeData.state) newErrors.editState = 'State is required';
+            if (!editedCollegeData.affiliatingUniversity.trim()) newErrors.editAffiliatingUniversity = 'Affiliating university is required';
         }
 
         if (!formData.positionName.trim()) newErrors.positionName = 'Position name is required';
@@ -175,6 +210,16 @@ const HiringPostForm: React.FC<HiringPostFormProps> = ({
 
         try {
             let finalCollegeId = collegeId;
+
+            // If editing existing college, update it first
+            if (collegeMode === 'existing' && editCollegeEnabled && editedCollegeData) {
+                const { success, error: updateError } = await updateCollege(collegeId, editedCollegeData);
+                if (!success) {
+                    setErrors({ editCollege: updateError || 'Failed to update college' });
+                    setIsSaving(false);
+                    return;
+                }
+            }
 
             // If creating a new college, create it first
             if (collegeMode === 'new') {
@@ -404,8 +449,14 @@ const HiringPostForm: React.FC<HiringPostFormProps> = ({
                                         <div className="text-text-sm-medium text-colors_text_text_primary_900_">
                                             {college.college_name_place}
                                         </div>
-                                        <div className="text-text-xs-regular text-colors_text_text_tertiary_600_ mt-spacing_xs">
-                                            {college.state}
+                                        {college.affiliating_university && (
+                                            <div className="text-text-xs-regular text-colors_text_text_secondary_700_ mt-spacing_xs">
+                                                {college.affiliating_university}
+                                            </div>
+                                        )}
+                                        <div className="text-text-xs-regular text-colors_text_text_tertiary_600_ mt-spacing_xs flex justify-between">
+                                            <span>{college.state}</span>
+                                            <span className="text-colors_text_text_quaternary_500_">ID: {college.id}</span>
                                         </div>
                                     </button>
                                 ))}
@@ -419,6 +470,186 @@ const HiringPostForm: React.FC<HiringPostFormProps> = ({
                             <p className="text-text-xs-regular text-colors_text_text_tertiary_600_ mt-spacing_xs">
                                 College ID: {collegeId}
                             </p>
+                        )}
+                    </div>
+                )}
+
+                {/* Edit College Details - only shown when a college is selected */}
+                {collegeMode === 'existing' && !initialData && collegeId > 0 && (
+                    <div className="p-spacing_xl rounded-radius_md border border-colors_border_border_secondary bg-colors_background_bg_secondary">
+                        <div className="flex items-center gap-spacing_md mb-spacing_lg">
+                            <input
+                                id="editCollegeEnabled"
+                                type="checkbox"
+                                checked={editCollegeEnabled}
+                                onChange={(e) => {
+                                    setEditCollegeEnabled(e.target.checked);
+                                    if (!e.target.checked) {
+                                        // Reset to original data when unchecking
+                                        setEditedCollegeData(collegeDetails);
+                                    }
+                                }}
+                                className="w-4 h-4 rounded border-colors_border_border_secondary text-colors_background_bg_brand_solid focus:ring-2 focus:ring-colors_background_bg_brand_solid/20"
+                            />
+                            <label htmlFor="editCollegeEnabled" className="text-text-sm-medium text-colors_text_text_primary_900_">
+                                Edit college details
+                            </label>
+                        </div>
+
+                        {editCollegeEnabled && (
+                            <>
+                                {isLoadingCollegeDetails ? (
+                                    // Skeleton loading state
+                                    <div className="space-y-spacing_lg animate-pulse">
+                                        <div className="h-10 bg-colors_background_bg_tertiary rounded-radius_md"></div>
+                                        <div className="grid grid-cols-2 gap-spacing_lg">
+                                            <div className="h-10 bg-colors_background_bg_tertiary rounded-radius_md"></div>
+                                            <div className="h-10 bg-colors_background_bg_tertiary rounded-radius_md"></div>
+                                        </div>
+                                        <div className="h-10 bg-colors_background_bg_tertiary rounded-radius_md"></div>
+                                        <div className="grid grid-cols-2 gap-spacing_lg">
+                                            <div className="h-10 bg-colors_background_bg_tertiary rounded-radius_md"></div>
+                                            <div className="h-10 bg-colors_background_bg_tertiary rounded-radius_md"></div>
+                                        </div>
+                                    </div>
+                                ) : editedCollegeData ? (
+                                    <div className="space-y-spacing_lg">
+                                        {/* College Name (with location) */}
+                                        <div>
+                                            <label className="block text-text-sm-medium text-colors_text_text_primary_900_ mb-spacing_sm">
+                                                College Name (with location) <span className="text-red-500">*</span>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={editedCollegeData.collegeNamePlace}
+                                                onChange={(e) => setEditedCollegeData({ ...editedCollegeData, collegeNamePlace: e.target.value })}
+                                                className="w-full px-spacing_lg py-spacing_md rounded-radius_md border border-colors_border_border_secondary bg-colors_background_bg_primary text-text-sm-regular text-colors_text_text_primary_900_ focus:outline-none focus:border-colors_border_border_brand_solid focus:ring-2 focus:ring-colors_background_bg_brand_solid/20"
+                                                placeholder="e.g., ABC Law College, Mumbai, Maharashtra"
+                                            />
+                                            {errors.editCollegeName && (
+                                                <p className="text-text-xs-regular text-red-600 mt-spacing_xs">{errors.editCollegeName}</p>
+                                            )}
+                                        </div>
+
+                                        {/* State & Type */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-spacing_lg">
+                                            <div>
+                                                <label className="block text-text-sm-medium text-colors_text_text_primary_900_ mb-spacing_sm">
+                                                    State <span className="text-red-500">*</span>
+                                                </label>
+                                                <select
+                                                    value={editedCollegeData.state}
+                                                    onChange={(e) => setEditedCollegeData({ ...editedCollegeData, state: e.target.value })}
+                                                    className="w-full px-spacing_lg py-spacing_md rounded-radius_md border border-colors_border_border_secondary bg-colors_background_bg_primary text-text-sm-regular text-colors_text_text_primary_900_ focus:outline-none focus:border-colors_border_border_brand_solid focus:ring-2 focus:ring-colors_background_bg_brand_solid/20"
+                                                >
+                                                    <option value="">Select State</option>
+                                                    {INDIAN_STATES.map(state => (
+                                                        <option key={state} value={state}>{state}</option>
+                                                    ))}
+                                                </select>
+                                                {errors.editState && (
+                                                    <p className="text-text-xs-regular text-red-600 mt-spacing_xs">{errors.editState}</p>
+                                                )}
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-text-sm-medium text-colors_text_text_primary_900_ mb-spacing_sm">
+                                                    Type <span className="text-red-500">*</span>
+                                                </label>
+                                                <select
+                                                    value={editedCollegeData.type}
+                                                    onChange={(e) => setEditedCollegeData({ ...editedCollegeData, type: e.target.value as 'Govt.' | 'Private' })}
+                                                    className="w-full px-spacing_lg py-spacing_md rounded-radius_md border border-colors_border_border_secondary bg-colors_background_bg_primary text-text-sm-regular text-colors_text_text_primary_900_ focus:outline-none focus:border-colors_border_border_brand_solid focus:ring-2 focus:ring-colors_background_bg_brand_solid/20"
+                                                >
+                                                    <option value="Private">Private</option>
+                                                    <option value="Govt.">Government</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        {/* Affiliating University */}
+                                        <div>
+                                            <label className="block text-text-sm-medium text-colors_text_text_primary_900_ mb-spacing_sm">
+                                                Affiliating University <span className="text-red-500">*</span>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={editedCollegeData.affiliatingUniversity}
+                                                onChange={(e) => setEditedCollegeData({ ...editedCollegeData, affiliatingUniversity: e.target.value })}
+                                                className="w-full px-spacing_lg py-spacing_md rounded-radius_md border border-colors_border_border_secondary bg-colors_background_bg_primary text-text-sm-regular text-colors_text_text_primary_900_ focus:outline-none focus:border-colors_border_border_brand_solid focus:ring-2 focus:ring-colors_background_bg_brand_solid/20"
+                                                placeholder="e.g., Mumbai University"
+                                            />
+                                            {errors.editAffiliatingUniversity && (
+                                                <p className="text-text-xs-regular text-red-600 mt-spacing_xs">{errors.editAffiliatingUniversity}</p>
+                                            )}
+                                        </div>
+
+                                        {/* URLs */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-spacing_lg">
+                                            <div>
+                                                <label className="block text-text-sm-medium text-colors_text_text_primary_900_ mb-spacing_sm">
+                                                    Career Page URL
+                                                </label>
+                                                <input
+                                                    type="url"
+                                                    value={editedCollegeData.careerPageUrl}
+                                                    onChange={(e) => setEditedCollegeData({ ...editedCollegeData, careerPageUrl: e.target.value })}
+                                                    className="w-full px-spacing_lg py-spacing_md rounded-radius_md border border-colors_border_border_secondary bg-colors_background_bg_primary text-text-sm-regular text-colors_text_text_primary_900_ focus:outline-none focus:border-colors_border_border_brand_solid focus:ring-2 focus:ring-colors_background_bg_brand_solid/20"
+                                                    placeholder="https://..."
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-text-sm-medium text-colors_text_text_primary_900_ mb-spacing_sm">
+                                                    College Website URL
+                                                </label>
+                                                <input
+                                                    type="url"
+                                                    value={editedCollegeData.collegeWebsiteUrl}
+                                                    onChange={(e) => setEditedCollegeData({ ...editedCollegeData, collegeWebsiteUrl: e.target.value })}
+                                                    className="w-full px-spacing_lg py-spacing_md rounded-radius_md border border-colors_border_border_secondary bg-colors_background_bg_primary text-text-sm-regular text-colors_text_text_primary_900_ focus:outline-none focus:border-colors_border_border_brand_solid focus:ring-2 focus:ring-colors_background_bg_brand_solid/20"
+                                                    placeholder="https://..."
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Coordinates */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-spacing_lg">
+                                            <div>
+                                                <label className="block text-text-sm-medium text-colors_text_text_primary_900_ mb-spacing_sm">
+                                                    Latitude
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    step="any"
+                                                    value={editedCollegeData.latitude || ''}
+                                                    onChange={(e) => setEditedCollegeData({ ...editedCollegeData, latitude: parseFloat(e.target.value) || 0 })}
+                                                    className="w-full px-spacing_lg py-spacing_md rounded-radius_md border border-colors_border_border_secondary bg-colors_background_bg_primary text-text-sm-regular text-colors_text_text_primary_900_ focus:outline-none focus:border-colors_border_border_brand_solid focus:ring-2 focus:ring-colors_background_bg_brand_solid/20"
+                                                    placeholder="e.g., 19.0760"
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-text-sm-medium text-colors_text_text_primary_900_ mb-spacing_sm">
+                                                    Longitude
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    step="any"
+                                                    value={editedCollegeData.longitude || ''}
+                                                    onChange={(e) => setEditedCollegeData({ ...editedCollegeData, longitude: parseFloat(e.target.value) || 0 })}
+                                                    className="w-full px-spacing_lg py-spacing_md rounded-radius_md border border-colors_border_border_secondary bg-colors_background_bg_primary text-text-sm-regular text-colors_text_text_primary_900_ focus:outline-none focus:border-colors_border_border_brand_solid focus:ring-2 focus:ring-colors_background_bg_brand_solid/20"
+                                                    placeholder="e.g., 72.8777"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {errors.editCollege && (
+                                            <p className="text-text-xs-regular text-red-600">{errors.editCollege}</p>
+                                        )}
+                                    </div>
+                                ) : null}
+                            </>
                         )}
                     </div>
                 )}
@@ -554,6 +785,37 @@ const HiringPostForm: React.FC<HiringPostFormProps> = ({
                                     onChange={(e) => setNewCollegeData({ ...newCollegeData, careerPageUrl: e.target.value })}
                                     className="w-full px-spacing_lg py-spacing_md rounded-radius_md border border-colors_border_border_secondary bg-colors_background_bg_primary text-text-sm-regular text-colors_text_text_primary_900_ focus:outline-none focus:border-colors_border_border_brand_solid focus:ring-2 focus:ring-colors_background_bg_brand_solid/20"
                                     placeholder="https://example.com/careers"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Coordinates */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-spacing_lg">
+                            <div>
+                                <label className="block text-text-sm-medium text-colors_text_text_primary_900_ mb-spacing_sm">
+                                    Latitude
+                                </label>
+                                <input
+                                    type="number"
+                                    step="any"
+                                    value={newCollegeData.latitude || ''}
+                                    onChange={(e) => setNewCollegeData({ ...newCollegeData, latitude: parseFloat(e.target.value) || undefined })}
+                                    className="w-full px-spacing_lg py-spacing_md rounded-radius_md border border-colors_border_border_secondary bg-colors_background_bg_primary text-text-sm-regular text-colors_text_text_primary_900_ focus:outline-none focus:border-colors_border_border_brand_solid focus:ring-2 focus:ring-colors_background_bg_brand_solid/20"
+                                    placeholder="e.g., 19.0760"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-text-sm-medium text-colors_text_text_primary_900_ mb-spacing_sm">
+                                    Longitude
+                                </label>
+                                <input
+                                    type="number"
+                                    step="any"
+                                    value={newCollegeData.longitude || ''}
+                                    onChange={(e) => setNewCollegeData({ ...newCollegeData, longitude: parseFloat(e.target.value) || undefined })}
+                                    className="w-full px-spacing_lg py-spacing_md rounded-radius_md border border-colors_border_border_secondary bg-colors_background_bg_primary text-text-sm-regular text-colors_text_text_primary_900_ focus:outline-none focus:border-colors_border_border_brand_solid focus:ring-2 focus:ring-colors_background_bg_brand_solid/20"
+                                    placeholder="e.g., 72.8777"
                                 />
                             </div>
                         </div>

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Lock, LogOut } from 'lucide-react';
+import { Lock } from 'lucide-react';
 
 interface AdminAuthProps {
-    children: React.ReactNode;
+    children: (onLogout: () => void) => React.ReactNode;
 }
 
 const ADMIN_AUTH_KEY = 'faculty_centre_admin_auth';
@@ -73,7 +73,7 @@ const AdminAuth: React.FC<AdminAuthProps> = ({ children }) => {
                             Admin Access Required
                         </h1>
                         <p className="text-text-sm-regular text-colors_text_text_secondary_700_ text-center mb-spacing_3xl">
-                            Enter your 6-digit PIN to access the hiring management system
+                            Enter your 6-digit PIN to access the management system
                         </p>
 
                         <form onSubmit={handleSubmit} className="space-y-spacing_xl">
@@ -123,32 +123,9 @@ const AdminAuth: React.FC<AdminAuthProps> = ({ children }) => {
         );
     }
 
-    return (
-        <div className="min-h-screen bg-colors_background_bg_primary">
-            <div className="border-b border-colors_border_border_secondary bg-colors_background_bg_secondary">
-                <div className="max-w-7xl mx-auto px-spacing_xl py-spacing_lg flex items-center justify-between">
-                    <div>
-                        <h1 className="text-text-xl-bold text-colors_text_text_primary_900_">
-                            Hiring Management System
-                        </h1>
-                        <p className="text-text-sm-regular text-colors_text_text_secondary_700_ mt-spacing_xs">
-                            Admin Panel
-                        </p>
-                    </div>
-                    <button
-                        onClick={handleLogout}
-                        className="flex items-center gap-spacing_sm px-spacing_lg py-spacing_md rounded-radius_md text-text-sm-medium text-colors_text_text_secondary_700_ hover:bg-colors_background_bg_tertiary transition-colors"
-                    >
-                        <LogOut size={16} />
-                        Logout
-                    </button>
-                </div>
-            </div>
-            <div className="max-w-7xl mx-auto px-spacing_xl py-spacing_3xl">
-                {children}
-            </div>
-        </div>
-    );
+    // Render children with logout callback - AdminDashboard handles its own layout
+    return <>{children(handleLogout)}</>;
 };
 
 export default AdminAuth;
+

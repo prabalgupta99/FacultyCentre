@@ -73,10 +73,8 @@ export const fetchCollegesInBounds = async (
         .gte('longitude', bounds.minLng)
         .lte('longitude', bounds.maxLng);
 
-      // Apply Filters
-      if (filters?.isHiring) {
-        query = query.eq('is_hiring', true);
-      }
+      // Note: We do NOT filter by is_hiring at the DB level because colleges with manual_hiring_posts
+      // might not have the is_hiring flag set. Client-side filtering handles this correctly.
 
       if (filters?.search) {
         query = query.ilike('college_name_place', `%${filters.search}%`);
