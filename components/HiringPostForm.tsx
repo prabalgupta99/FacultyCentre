@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ManualHiringPost } from '../types';
-import { searchColleges, CollegeSearchResult, NewCollege, createCollege, createMultipleHiringPosts, CollegeDetails, fetchCollegeById, updateCollege } from '../services/hiringPostService';
-import { X, Search, Calendar, Plus, Loader2 } from 'lucide-react';
+import { searchColleges, CollegeSearchResult, NewCollege, createCollege, createMultipleHiringPosts, CollegeDetails, fetchCollegeById, updateCollege, FormOption, fetchFormOptions } from '../services/hiringPostService';
+import { X, Search, Calendar, Plus, Loader2, Edit2 } from 'lucide-react';
+import ChipManagerModal from './ChipManagerModal';
 
 interface HiringPostFormProps {
     initialData?: ManualHiringPost;
@@ -10,37 +11,9 @@ interface HiringPostFormProps {
     isLoading?: boolean;
 }
 
-// Quick-fill options
-const POSITION_OPTIONS = [
-    'Assistant Professor',
-    'Associate Professor',
-    'Professor',
-    'Vice Chancellor',
-    'Registrar',
-    'Deputy Registrar',
-    'Librarian',
-    'Assistant Librarian',
-    'Controller of Examination',
-    'Head of Department',
-    'Principal',
-    'Dean'
-];
+// Quick-fill options are now fetched dynamically
+// Keeping Indian States hardcoded as they don't change often
 
-const APPLICATION_MEDIUM_OPTIONS = [
-    'Interested candidates can apply with updated bio-data and relevant documents through Email within 10 days from the date of advertisement.',
-    'Interested and Eligible candidates may apply through Email by sending their resume and other supporting documents immediately'
-];
-
-const SALARY_OPTIONS = [
-    'As per norms',
-    'Strictly follows the UGC and CPC norms'
-];
-
-const APPLICATION_FEE_OPTIONS = [
-    'UR- Rs. 2000/-',
-    'OBC/EWS – Rs. 1000/-',
-    'SC/ST/PwD/Women- Exempted'
-];
 
 // Indian States
 const INDIAN_STATES = [
@@ -104,6 +77,39 @@ const HiringPostForm: React.FC<HiringPostFormProps> = ({
 
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [isSaving, setIsSaving] = useState(false);
+
+    // Dynamic Options State
+    const [positionOptions, setPositionOptions] = useState<FormOption[]>([]);
+    const [salaryOptions, setSalaryOptions] = useState<FormOption[]>([]);
+    const [mediumOptions, setMediumOptions] = useState<FormOption[]>([]);
+    const [feeOptions, setFeeOptions] = useState<FormOption[]>([]);
+
+    // Chip Manager Modal State
+    const [activeChipModal, setActiveChipModal] = useState<'POSITION' | 'SALARY' | 'APPLICATION_MEDIUM' | 'APPLICATION_FEE' | null>(null);
+
+    // Fetch chip options
+    const refreshOptions = useCallback(async (category?: string) => {
+        if (!category || category === 'POSITION') {
+            const { data } = await fetchFormOptions('POSITION');
+            if (data) setPositionOptions(data);
+        }
+        if (!category || category === 'SALARY') {
+            const { data } = await fetchFormOptions('SALARY');
+            if (data) setSalaryOptions(data);
+        }
+        if (!category || category === 'APPLICATION_MEDIUM') {
+            const { data } = await fetchFormOptions('APPLICATION_MEDIUM');
+            if (data) setMediumOptions(data);
+        }
+        if (!category || category === 'APPLICATION_FEE') {
+            const { data } = await fetchFormOptions('APPLICATION_FEE');
+            if (data) setFeeOptions(data);
+        }
+    }, []);
+
+    useEffect(() => {
+        refreshOptions();
+    }, [refreshOptions]);
 
     // Debounced college search
     useEffect(() => {
@@ -355,19 +361,30 @@ const HiringPostForm: React.FC<HiringPostFormProps> = ({
         }
     };
 
-    const QuickFillChips: React.FC<{ options: string[]; onSelect: (value: string) => void }> = ({ options, onSelect }) => (
-        <div className="flex flex-wrap gap-spacing_sm mt-spacing_sm">
-            {options.map((option, idx) => (
+
+
+    const QuickFillChips: React.FC<{ options: FormOption[]; onSelect: (value: string) => void; onManage: () => void }> = ({ options, onSelect, onManage }) => (
+        <div className="flex flex-wrap gap-spacing_sm mt-spacing_sm transition-all animate-in fade-in slide-in-from-top-1 items-center">
+            {options.map((option) => (
                 <button
-                    key={idx}
+                    key={option.id}
                     type="button"
-                    onClick={() => onSelect(option)}
+                    onClick={() => onSelect(option.label)}
                     className="px-spacing_md py-spacing_xs rounded-radius_full text-text-xs-medium bg-colors_background_bg_tertiary text-colors_text_text_secondary_700_ border border-colors_border_border_secondary hover:bg-colors_background_bg_brand_secondary hover:text-colors_text_text_brand_primary_600_ hover:border-colors_border_border_brand_solid transition-colors"
                 >
                     <Plus size={10} className="inline mr-spacing_xs" />
-                    {option.length > 40 ? `${option.substring(0, 40)}...` : option}
+                    {option.label.length > 40 ? `${option.label.substring(0, 40)}...` : option.label}
                 </button>
             ))}
+            <button
+                type="button"
+                onClick={onManage}
+                className="px-spacing_md py-spacing_xs rounded-radius_full text-text-xs-medium bg-colors_background_bg_secondary text-colors_text_text_tertiary_600_ border border-colors_border_border_secondary hover:bg-colors_background_bg_tertiary hover:text-colors_text_text_primary_900_ transition-colors flex items-center gap-1.5"
+                title="Manage options"
+            >
+                <Edit2 size={10} />
+                Manage
+            </button>
         </div>
     );
 
@@ -852,8 +869,9 @@ const HiringPostForm: React.FC<HiringPostFormProps> = ({
                     <p className="text-text-xs-regular text-red-600 mt-spacing_xs">{errors.positionName}</p>
                 )}
                 <QuickFillChips
-                    options={POSITION_OPTIONS}
+                    options={positionOptions}
                     onSelect={(val) => addChipValue('positionName', val)}
+                    onManage={() => setActiveChipModal('POSITION')}
                 />
             </div>
 
@@ -924,8 +942,9 @@ const HiringPostForm: React.FC<HiringPostFormProps> = ({
                     <p className="text-text-xs-regular text-red-600 mt-spacing_xs">{errors.applicationMedium}</p>
                 )}
                 <QuickFillChips
-                    options={APPLICATION_MEDIUM_OPTIONS}
+                    options={mediumOptions}
                     onSelect={(val) => addChipValue('applicationMedium', val)}
+                    onManage={() => setActiveChipModal('APPLICATION_MEDIUM')}
                 />
             </div>
 
@@ -949,8 +968,9 @@ const HiringPostForm: React.FC<HiringPostFormProps> = ({
                     <p className="text-text-xs-regular text-red-600 mt-spacing_xs">{errors.salary}</p>
                 )}
                 <QuickFillChips
-                    options={SALARY_OPTIONS}
+                    options={salaryOptions}
                     onSelect={(val) => addChipValue('salary', val)}
+                    onManage={() => setActiveChipModal('SALARY')}
                 />
             </div>
 
@@ -1083,8 +1103,9 @@ const HiringPostForm: React.FC<HiringPostFormProps> = ({
                             <p className="text-text-xs-regular text-red-600 mt-spacing_xs">{errors.applicationFee}</p>
                         )}
                         <QuickFillChips
-                            options={APPLICATION_FEE_OPTIONS}
+                            options={feeOptions}
                             onSelect={(val) => addChipValue('applicationFee', val)}
+                            onManage={() => setActiveChipModal('APPLICATION_FEE')}
                         />
                     </div>
                 )}
@@ -1152,6 +1173,16 @@ const HiringPostForm: React.FC<HiringPostFormProps> = ({
                     Cancel
                 </button>
             </div>
+            {/* Chip Manager Modal */}
+            {activeChipModal && (
+                <ChipManagerModal
+                    isOpen={!!activeChipModal}
+                    onClose={() => setActiveChipModal(null)}
+                    category={activeChipModal}
+                    title={activeChipModal.replace('_', ' ')} // e.g. "APPLICATION MEDIUM"
+                    onUpdate={() => refreshOptions(activeChipModal)}
+                />
+            )}
         </form>
     );
 };

@@ -622,3 +622,71 @@ export const createMultipleHiringPosts = async (
         };
     }
 };
+
+// --- Form Options (Chips) Service ---
+
+export interface FormOption {
+    id: number;
+    category: 'POSITION' | 'SALARY' | 'APPLICATION_MEDIUM' | 'APPLICATION_FEE';
+    label: string;
+}
+
+export const fetchFormOptions = async (category: string) => {
+    const { data, error } = await supabase
+        .from('form_options')
+        .select('*')
+        .eq('category', category)
+        .order('id', { ascending: true }); // Creation order
+
+    if (error) {
+        console.error(`Error fetching ${category} options:`, error);
+        return { data: [], error: error.message };
+    }
+
+    return { data: data as FormOption[], error: null };
+};
+
+export const addFormOption = async (category: string, label: string) => {
+    const { data, error } = await supabase
+        .from('form_options')
+        .insert([{ category, label }])
+        .select()
+        .single();
+
+    if (error) {
+        console.error(`Error adding ${category} option:`, error);
+        return { data: null, error: error.message };
+    }
+
+    return { data: data as FormOption, error: null };
+};
+
+export const updateFormOption = async (id: number, label: string) => {
+    const { data, error } = await supabase
+        .from('form_options')
+        .update({ label })
+        .eq('id', id)
+        .select()
+        .single();
+
+    if (error) {
+        console.error(`Error updating form option ${id}:`, error);
+        return { data: null, error: error.message };
+    }
+
+    return { data: data as FormOption, error: null };
+};
+
+export const deleteFormOption = async (id: number) => {
+    const { error } = await supabase
+        .from('form_options')
+        .delete()
+        .eq('id', id);
+
+    if (error) {
+        console.error(`Error deleting form option ${id}:`, error);
+        return { success: false, error: error.message };
+    }
+
+    return { success: true, error: null };
+};
