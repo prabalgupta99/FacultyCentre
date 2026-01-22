@@ -57,12 +57,12 @@ const KEYWORDS = {
     STRONG_SIGNALS: [
         "walk-in interview", "walk in interview", "applications are invited",
         "advertisement for the post", "recruitment of", "guest faculty",
-        "click here to apply"
+        "click here to apply", "contractual recruitment", "regular recruitment"
     ],
     MEDIUM_SIGNALS: [
         "vacancy", "opening", "teaching post", "non-teaching",
         "assistant professor", "contractual", "project fellow",
-        "apply online"  // Reduced from strong (+30) to medium (+10)
+        "apply online", "apply now"  // Reduced from strong (+30) to medium (+10)
     ],
     // NEW: Contact-Based Application Methods (+5 each)
     CONTACT_METHODS: [
