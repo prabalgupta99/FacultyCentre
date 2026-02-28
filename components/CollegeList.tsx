@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { College, CollegeType } from '../types';
+import { College, CollegeType, isHiringPostActive } from '../types';
 import { ExternalLink, Briefcase } from 'lucide-react';
 
 interface CollegeListProps {
@@ -90,7 +90,7 @@ const CollegeList: React.FC<CollegeListProps> = ({ colleges, selectedCollegeId, 
                   </div>
 
                   {/* Hiring Status Badge (Replacement for Job Count) */}
-                  {college.isHiring && (
+                  {(college.isHiring || college.manualHiringPosts?.some(post => isHiringPostActive(post.lastDateToApply))) && (
                     <div className="flex items-center justify-center px-spacing_md py-spacing_xs rounded-radius_sm border border-colors_border_hiring bg-emerald-50 text-emerald-700 flex-shrink-0 ml-spacing_lg">
                       <span className="text-[10px] font-bold uppercase tracking-wider">HIRING</span>
                     </div>

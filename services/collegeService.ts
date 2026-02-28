@@ -183,7 +183,10 @@ export const fetchCollegesInBounds = async (
 export const analyzeCollegeCareerPage = async (url: string): Promise<{ isHiring: boolean; score: number; reasons: string[]; error?: string }> => {
   try {
     const { data, error } = await supabase.functions.invoke('analyze-careers', {
-      body: { url }
+      body: { url },
+      headers: {
+        Authorization: `Bearer ${(import.meta as any).env.VITE_SUPABASE_ANON_KEY}`
+      }
     });
 
     if (error) {

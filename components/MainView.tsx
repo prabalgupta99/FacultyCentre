@@ -2,7 +2,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { fetchColleges, fetchCollegesInBounds } from '../services/collegeService';
-import { CollegeType, College } from '../types';
+import { CollegeType, College, isHiringPostActive } from '../types';
 import MapComponent from './Map';
 import CollegeList from './CollegeList';
 import JobDetailsSheet from './JobDetailsSheet';
@@ -196,11 +196,11 @@ const MainView: React.FC = () => {
       const matchesType = filterType === 'ALL' || college.type === filterType;
 
       let matchesHiring = true;
-      const hasManualPosts = college.manualHiringPosts && college.manualHiringPosts.length > 0;
+      const hasActiveManualPosts = college.manualHiringPosts && college.manualHiringPosts.some(post => isHiringPostActive(post.lastDateToApply));
       if (hiringFilter === 'yes') {
-        matchesHiring = college.isHiring || college.openings.length > 0 || hasManualPosts;
+        matchesHiring = college.isHiring || college.openings.length > 0 || !!hasActiveManualPosts;
       } else if (hiringFilter === 'no') {
-        matchesHiring = !college.isHiring && college.openings.length === 0 && !hasManualPosts;
+        matchesHiring = !college.isHiring && college.openings.length === 0 && !hasActiveManualPosts;
       }
 
       return matchesSearch && matchesType && matchesHiring;
