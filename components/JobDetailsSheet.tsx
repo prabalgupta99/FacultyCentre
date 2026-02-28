@@ -26,6 +26,7 @@ const JobDetailsSheet: React.FC<JobDetailsSheetProps> = ({ college, isOpen, onCl
     );
     const [embeddableStatus, setEmbeddableStatus] = useState<Record<string, boolean>>({});
     const [checkingStatus, setCheckingStatus] = useState<Record<string, boolean>>({});
+    const [showBanner, setShowBanner] = useState<Record<string, boolean>>({});
 
     const checkUrl = useCallback(async (url: string) => {
         if (!url || embeddableStatus[url] !== undefined || checkingStatus[url]) return;
@@ -53,6 +54,20 @@ const JobDetailsSheet: React.FC<JobDetailsSheetProps> = ({ college, isOpen, onCl
     useEffect(() => {
         if (activeTab === 'website' && college.website) checkUrl(college.website);
         if (activeTab === 'career' && college.careerPageUrl) checkUrl(college.careerPageUrl);
+
+        // Timer for banner transition
+        const url1 = college.website;
+        const url2 = college.careerPageUrl;
+
+        const timers: NodeJS.Timeout[] = [];
+        if (activeTab === 'website' && url1 && !showBanner[url1]) {
+            timers.push(setTimeout(() => setShowBanner(prev => ({ ...prev, [url1]: true })), 2000));
+        }
+        if (activeTab === 'career' && url2 && !showBanner[url2]) {
+            timers.push(setTimeout(() => setShowBanner(prev => ({ ...prev, [url2]: true })), 2000));
+        }
+
+        return () => timers.forEach(clearTimeout);
     }, [activeTab, college.website, college.careerPageUrl, checkUrl]);
 
 
@@ -64,22 +79,22 @@ const JobDetailsSheet: React.FC<JobDetailsSheetProps> = ({ college, isOpen, onCl
             <div className="h-[calc(100vh-200px)] flex flex-col gap-spacing_sm">
                 {url ? (
                     <>
-                        <div className="flex items-center justify-between px-spacing_lg py-spacing_md bg-colors_background_bg_brand_solid_subtle border border-colors_border_border_secondary rounded-radius_sm">
+                        <a
+                            href={url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className={`flex items-center justify-between px-spacing_lg bg-colors_background_bg_brand_solid_subtle border-x border-t border-colors_border_border_secondary rounded-t-radius_sm hover:bg-colors_background_bg_brand_section transition-all duration-500 ease-in-out cursor-pointer group overflow-hidden ${showBanner[url] ? 'py-spacing_md opacity-100 max-h-20' : 'py-0 opacity-0 max-h-0 border-0'}`}
+                        >
                             <div className="flex items-center gap-spacing_xs text-text-xs-regular text-colors_text_text_tertiary_600_">
                                 <span className="hidden sm:inline">Page not loading here?</span>
-                                <a
-                                    href={url}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="text-text-xs-semibold text-colors_text_text_brand_action hover:text-colors_background_bg_brand_section transition-colors whitespace-nowrap hover:underline"
-                                >
+                                <span className="text-text-xs-semibold text-colors_text_text_brand_action group-hover:underline">
                                     Open website in new tab
-                                </a>
+                                </span>
                             </div>
                             <span className="text-text-xs-regular text-colors_text_text_tertiary_600_ truncate font-mono ml-spacing_md max-w-[200px] sm:max-w-[300px]">
                                 {url}
                             </span>
-                        </div>
+                        </a>
                         {isBlocked ? (
                             <div className="w-full h-full flex flex-col items-center justify-center bg-colors_background_bg_secondary border border-colors_border_border_secondary rounded-radius_md p-spacing_xl text-center">
                                 <div className="w-16 h-16 rounded-full bg-colors_background_bg_tertiary flex items-center justify-center mb-spacing_lg text-colors_text_text_tertiary_600_">
@@ -121,9 +136,9 @@ const JobDetailsSheet: React.FC<JobDetailsSheetProps> = ({ college, isOpen, onCl
 
     const renderTextWithLinks = (text: string) => {
         if (!text) return null;
-        const urlRegex = /(https?:\/\/[^\s]+)/g;
-        return text.split(urlRegex).map((part, index) => {
-            if (urlRegex.test(part)) {
+        const globalRegex = /(https?:\/\/[^\s]+)/g;
+        return text.split(globalRegex).map((part, index) => {
+            if (/^https?:\/\//.test(part)) {
                 return (
                     <a
                         key={index}
