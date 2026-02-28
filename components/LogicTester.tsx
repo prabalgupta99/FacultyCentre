@@ -1,8 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { College } from '../types';
-import { fetchColleges, saveScoreHistory } from '../services/collegeService';
-import { analyzeCareerPage } from './logic';
+import { fetchColleges, saveScoreHistory, analyzeCollegeCareerPage } from '../services/collegeService';
 import { Play, Check, AlertTriangle, Save, Loader2, MessageSquare, X, Clipboard, Info } from 'lucide-react';
 
 const LogicTester: React.FC = () => {
@@ -93,19 +92,13 @@ const LogicTester: React.FC = () => {
             if (!college.careerPageUrl) continue;
 
             try {
-                // Fetch via Proxy
-                const encodedUrl = encodeURIComponent(college.careerPageUrl);
-                const response = await fetch(`/api/proxy?url=${encodedUrl}`);
-
                 let analysisResult;
                 let fetchStatus = 'success';
 
-                if (!response.ok) {
+                analysisResult = await analyzeCollegeCareerPage(college.careerPageUrl);
+
+                if (analysisResult.error) {
                     fetchStatus = 'error';
-                    analysisResult = { score: 0, is_hiring: false, reason: 'Fetch Failed' };
-                } else {
-                    const html = await response.text();
-                    analysisResult = analyzeCareerPage(html);
                 }
 
                 // Check for manual overrides or DB status
@@ -118,11 +111,11 @@ const LogicTester: React.FC = () => {
                     name: college.name,
                     url: college.careerPageUrl,
                     oldScore: getLatestScore(college),
-                    newScore: analysisResult.confidence_score,
-                    isHiringV4: analysisResult.is_hiring, // Logic V4 Result
+                    newScore: analysisResult.score || 0,
+                    isHiringV4: analysisResult.isHiring || false, // Logic V4 Result
                     isHiringV2: getLatestScore(college) >= 40 && (college.scoreHistory || []).length > 0, // Logic V2 assumption
                     isHiringDB: dbIsHiring, // Actual DB Status (what user sees in product)
-                    reason: analysisResult.reason,
+                    reason: analysisResult.reasons?.[0] || analysisResult.error || 'No reason provided',
                     status: fetchStatus,
                     rawHistory: college.scoreHistory,
                     manualPostsCount: college.manualHiringPosts?.length || 0,
