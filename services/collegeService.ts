@@ -41,6 +41,7 @@ export const fetchColleges = async (): Promise<{ data: College[]; error: string 
       affiliatingUniversity: row.affiliating_university || '',
       careerPageUrl: row.career_page_url || '',
       isHiring: row.is_hiring || false,
+      scoreHistory: row.score_history || [],
       openings: [] // No Job table in new database - will be added manually later
     }));
 
@@ -59,14 +60,34 @@ export const fetchCollegesInBounds = async (
   filters?: { search?: string; isHiring?: boolean }
 ): Promise<{ data: College[]; error: string | null }> => {
   try {
-    let allCollegesData: any[] = [];
-    let offset = 0;
-    const PAGE_SIZE = 1000; // Supabase default max rows
-    const MAX_LIMIT = 5000; // Our target limit
-    let hasMore = true;
+    const PAGE_SIZE = 1000;
+    const MAX_LIMIT = 5000;
 
-    while (hasMore && allCollegesData.length < MAX_LIMIT) {
-      let query = supabase
+    // 1. Get Total Count first
+    let query = supabase
+      .from('colleges')
+      .select('*', { count: 'exact', head: true })
+      .gte('latitude', bounds.minLat)
+      .lte('latitude', bounds.maxLat)
+      .gte('longitude', bounds.minLng)
+      .lte('longitude', bounds.maxLng);
+
+    if (filters?.search) {
+      query = query.ilike('college_name_place', `%${filters.search}%`);
+    }
+
+    const { count, error: countError } = await query;
+    if (countError) throw countError;
+
+    if (!count) return { data: [], error: null };
+
+    // 2. Fetch pages in parallel
+    const promises = [];
+    const finalCount = Math.min(count, MAX_LIMIT);
+
+    for (let i = 0; i < finalCount; i += PAGE_SIZE) {
+      // Re-construct query for each page to avoid state issues
+      let pageQuery = supabase
         .from('colleges')
         .select('*')
         .gte('latitude', bounds.minLat)
@@ -74,30 +95,26 @@ export const fetchCollegesInBounds = async (
         .gte('longitude', bounds.minLng)
         .lte('longitude', bounds.maxLng);
 
-      // Note: We do NOT filter by is_hiring at the DB level because colleges with manual_hiring_posts
-      // might not have the is_hiring flag set. Client-side filtering handles this correctly.
-
       if (filters?.search) {
-        query = query.ilike('college_name_place', `%${filters.search}%`);
+        pageQuery = pageQuery.ilike('college_name_place', `%${filters.search}%`);
       }
 
-      // Fetch page
-      const { data, error } = await query.range(offset, offset + PAGE_SIZE - 1);
-
-      if (error) throw error;
-
-      if (data && data.length > 0) {
-        allCollegesData = [...allCollegesData, ...data];
-        // If we got less than a full page, we've reached the end
-        if (data.length < PAGE_SIZE) {
-          hasMore = false;
-        }
-      } else {
-        hasMore = false;
-      }
-
-      offset += PAGE_SIZE;
+      promises.push(pageQuery.range(i, i + PAGE_SIZE - 1));
     }
+
+    const results = await Promise.all(promises);
+
+    // 3. Flatten and process results
+    const errors = results.filter(r => r.error);
+    if (errors.length > 0) {
+      console.warn("Some page fetches failed:", errors);
+      // Depending on severity, we could throw or just process what we got
+      // For now, let's process successes
+    }
+
+    const allCollegesData = results
+      .filter(r => r.data)
+      .flatMap(r => r.data || []);
 
     const collegesData = allCollegesData;
 
@@ -187,9 +204,45 @@ export const checkIframeCompatibility = async (url: string): Promise<boolean> =>
       console.warn('Edge function check failed, defaulting to true (Allow) to ensure valid sites work.', error);
       return true;
     }
-    return data?.embeddable ?? true;
+    return true;
   } catch (error) {
     console.error("Error checking iframe compatibility:", error);
     return true;
+  }
+};
+
+export const saveScoreHistory = async (collegeId: string, historyEntry: any): Promise<{ success: boolean; error?: string }> => {
+  try {
+    // 1. Fetch current history first to append
+    const { data: current, error: fetchError } = await supabase
+      .from('colleges')
+      .select('score_history')
+      .eq('id', collegeId)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    let history = current?.score_history || [];
+    if (!Array.isArray(history)) history = [];
+
+    // Append new history
+    let newHistory = history;
+    if (Array.isArray(historyEntry)) {
+      newHistory = historyEntry; // Replace if array provided
+    } else {
+      newHistory.push(historyEntry); // Append if single object
+    }
+
+    const { error: updateError } = await supabase
+      .from('colleges')
+      .update({ score_history: newHistory })
+      .eq('id', collegeId);
+
+    if (updateError) throw updateError;
+    return { success: true };
+
+  } catch (error: any) {
+    console.error("Error saving score history:", error);
+    return { success: false, error: error.message };
   }
 };

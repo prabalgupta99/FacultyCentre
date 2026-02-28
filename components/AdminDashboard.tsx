@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import HiringPostManager from './HiringPostManager';
 import CollegeDetailsEditor from './CollegeDetailsEditor';
+import LogicTester from './LogicTester';
 import { LogOut, Briefcase, GraduationCap } from 'lucide-react';
 
-type TabType = 'hiring' | 'colleges';
+type TabType = 'hiring' | 'colleges' | 'logic';
 
 interface AdminDashboardProps {
     onLogout: () => void;
@@ -40,8 +41,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                         <button
                             onClick={() => setActiveTab('hiring')}
                             className={`pb-spacing_md text-text-sm-semibold transition-all relative border-b-2 ${activeTab === 'hiring'
-                                    ? 'text-colors_text_text_brand_primary_900_ border-colors_background_bg_brand_solid'
-                                    : 'text-colors_text_text_tertiary_600_ border-transparent hover:text-colors_text_text_primary_900_'
+                                ? 'text-colors_text_text_brand_primary_900_ border-colors_background_bg_brand_solid'
+                                : 'text-colors_text_text_tertiary_600_ border-transparent hover:text-colors_text_text_primary_900_'
                                 }`}
                         >
                             Hiring Management
@@ -49,11 +50,20 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                         <button
                             onClick={() => setActiveTab('colleges')}
                             className={`pb-spacing_md text-text-sm-semibold transition-all relative border-b-2 ${activeTab === 'colleges'
-                                    ? 'text-colors_text_text_brand_primary_900_ border-colors_background_bg_brand_solid'
-                                    : 'text-colors_text_text_tertiary_600_ border-transparent hover:text-colors_text_text_primary_900_'
+                                ? 'text-colors_text_text_brand_primary_900_ border-colors_background_bg_brand_solid'
+                                : 'text-colors_text_text_tertiary_600_ border-transparent hover:text-colors_text_text_primary_900_'
                                 }`}
                         >
                             College Details
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('logic')}
+                            className={`pb-spacing_md text-text-sm-semibold transition-all relative border-b-2 ${activeTab === 'logic'
+                                ? 'text-colors_text_text_brand_primary_900_ border-colors_background_bg_brand_solid'
+                                : 'text-colors_text_text_tertiary_600_ border-transparent hover:text-colors_text_text_primary_900_'
+                                }`}
+                        >
+                            Logic Lab
                         </button>
                     </div>
                 </div>
@@ -63,6 +73,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             <main className="max-w-7xl mx-auto px-spacing_2xl py-spacing_2xl">
                 {activeTab === 'hiring' && <HiringPostManager />}
                 {activeTab === 'colleges' && <CollegeDetailsEditor />}
+                {activeTab === 'logic' && <LogicTester />}
             </main>
         </div>
     );

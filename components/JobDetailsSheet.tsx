@@ -37,8 +37,14 @@ const JobDetailsSheet: React.FC<JobDetailsSheetProps> = ({ college, isOpen, onCl
             return;
         }
 
-        setCheckingStatus(prev => ({ ...prev, [url]: true }));
+        // Wait 2 seconds before showing the warning to give iframe time to load
+        const timer = setTimeout(() => {
+            setCheckingStatus(prev => ({ ...prev, [url]: true }));
+        }, 2000); // 2 second delay to match previous UI behavior
+
         const isEmbeddable = await checkIframeCompatibility(url);
+        clearTimeout(timer);
+
         setEmbeddableStatus(prev => ({ ...prev, [url]: isEmbeddable }));
         setCheckingStatus(prev => ({ ...prev, [url]: false }));
         localStorage.setItem(`embed_check_v2_${url}`, String(isEmbeddable));
@@ -111,6 +117,28 @@ const JobDetailsSheet: React.FC<JobDetailsSheetProps> = ({ college, isOpen, onCl
                 )}
             </div>
         );
+    };
+
+    const renderTextWithLinks = (text: string) => {
+        if (!text) return null;
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        return text.split(urlRegex).map((part, index) => {
+            if (urlRegex.test(part)) {
+                return (
+                    <a
+                        key={index}
+                        href={part}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-colors_text_text_brand_primary_600_ hover:underline break-all inline-block py-spacing_xs px-spacing_sm -ml-spacing_sm rounded-radius_md hover:bg-colors_background_bg_brand_solid_subtle transition-colors"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {part}
+                    </a>
+                );
+            }
+            return <span key={index}>{part}</span>;
+        });
     };
 
 
@@ -228,7 +256,7 @@ const JobDetailsSheet: React.FC<JobDetailsSheetProps> = ({ college, isOpen, onCl
                                                                 Application Medium
                                                             </h4>
                                                             <p className="text-text-sm-regular leading-relaxed text-colors_text_text_secondary_700_ whitespace-pre-wrap">
-                                                                {post.applicationMedium}
+                                                                {renderTextWithLinks(post.applicationMedium || '')}
                                                             </p>
                                                         </div>
 
