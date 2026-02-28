@@ -51,7 +51,6 @@ export interface College {
   affiliatingUniversity: string;
   careerPageUrl: string;
   isHiring: boolean;
-  scoreHistory?: any[]; // JSONB data
   manualHiringPosts?: ManualHiringPost[]; // Manual hiring posts from admin
 }
 

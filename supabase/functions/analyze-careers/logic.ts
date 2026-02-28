@@ -56,19 +56,13 @@ const KEYWORDS = {
     ],
     STRONG_SIGNALS: [
         "walk-in interview", "walk in interview", "applications are invited",
-        "advertisement for the post", "recruitment of",
-        "click here to apply", "current vacancies", "regular recruitment",
-        "contractual recruitment", "advertisement for various", "guest faculty"
+        "advertisement for the post", "recruitment of", "guest faculty",
+        "click here to apply", "contractual recruitment", "regular recruitment"
     ],
     MEDIUM_SIGNALS: [
         "vacancy", "opening", "teaching post", "non-teaching",
         "assistant professor", "contractual", "project fellow",
-        "apply online", "apply now", "date extended",
-        "last date extended", "apply for the post"
-    ],
-    // NEW: Category Headers (Weak Signals: +5 text, +10 link)
-    CATEGORY_SIGNALS: [
-        "guest faculty recruitment"
+        "apply online", "apply now"  // Reduced from strong (+30) to medium (+10)
     ],
     // NEW: Contact-Based Application Methods (+5 each)
     CONTACT_METHODS: [
