@@ -83,7 +83,7 @@ const JobDetailsSheet: React.FC<JobDetailsSheetProps> = ({ college, isOpen, onCl
                             href={url}
                             target="_blank"
                             rel="noreferrer"
-                            className={`flex items-center justify-between px-spacing_lg bg-colors_background_bg_brand_solid_subtle border-x border-t border-colors_border_border_secondary rounded-t-radius_sm hover:bg-colors_background_bg_brand_section transition-all duration-500 ease-in-out cursor-pointer group overflow-hidden ${showBanner[url] ? 'py-spacing_md opacity-100 max-h-20' : 'py-0 opacity-0 max-h-0 border-0'}`}
+                            className={`flex items-center justify-between px-spacing_lg bg-colors_background_bg_brand_solid_subtle border border-colors_border_border_secondary rounded-radius_md hover:bg-colors_background_bg_brand_secondary transition-all duration-500 ease-in-out cursor-pointer group overflow-hidden ${showBanner[url] ? 'py-spacing_md opacity-100 max-h-20' : 'py-0 opacity-0 max-h-0 border-0'}`}
                         >
                             <div className="flex items-center gap-spacing_xs text-text-xs-regular text-colors_text_text_tertiary_600_">
                                 <span className="hidden sm:inline">Page not loading here?</span>
