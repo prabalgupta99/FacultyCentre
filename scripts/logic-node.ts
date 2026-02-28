@@ -1,5 +1,5 @@
 /**
- * Faculty Centre Career Scraper Logic
+ * Faculty Centre Career Scraper Logic (Node.js Version)
  * 
  * Implements Exclusion-First Protocol:
  * A college page is presumed NOT hiring until it passes ALL negative filters,
@@ -8,7 +8,7 @@
  * Pipeline: Preprocessing → Negative Filter → Zero State → Date Check → Scoring
  */
 
-import { DOMParser, Element } from "https://deno.land/x/deno_dom/deno-dom-wasm.ts";
+import { JSDOM } from 'jsdom';
 
 // ============================================================================
 // TYPES & CONFIGURATION
@@ -21,7 +21,7 @@ export interface HiringStatus {
 }
 
 const CONFIG = {
-    SCORE_THRESHOLD: 25,
+    SCORE_THRESHOLD: 25, // Updated to 25 based on user manual edit
     MAX_STALE_DAYS: 90,
     NEGATIVE_KEYWORD_LIMIT: 5,
 };
@@ -110,7 +110,6 @@ const KEYWORDS = {
         "experience certificates", "scanned copies"
     ],
     ANCHOR_BOOST_KEYWORDS: [
-        // Strong signals + specific medium keywords
         "walk-in interview", "walk in interview", "applications are invited",
         "advertisement for the post", "recruitment of", "guest faculty",
         "click here to apply", "vacancy"
@@ -123,15 +122,15 @@ const KEYWORDS = {
 // ============================================================================
 
 function preprocessHTML(html: string): { cleanText: string; doc: any; links: Element[] } {
-    const doc = new DOMParser().parseFromString(html, "text/html");
-    if (!doc) throw new Error("Failed to parse HTML");
+    const dom = new JSDOM(html);
+    const doc = dom.window.document;
 
-    // Remove noise elements
-    const noiseElements = doc.querySelectorAll('script, style, nav, footer, noscript');
-    noiseElements.forEach((el: Element) => el.parentNode?.removeChild(el));
+    // Remove noise elements + NEW Footer Removal
+    const noiseElements = doc.querySelectorAll('script, style, nav, footer, noscript, .footer, #footer, .site-footer, .copyright');
+    noiseElements.forEach((el) => el.parentNode?.removeChild(el));
 
     const bodyText = doc.body?.textContent || "";
-    const links = Array.from(doc.querySelectorAll('a')) as Element[];
+    const links = Array.from(doc.querySelectorAll('a'));
 
     // Normalize: lowercase, collapse whitespace
     const cleanText = bodyText
@@ -171,7 +170,6 @@ function checkNegativeFilter(text: string): HiringStatus | null {
 // ============================================================================
 
 function checkZeroState(text: string, doc: any): HiringStatus | null {
-    // Explicit textual zero state
     for (const keyword of KEYWORDS.ZERO_STATE) {
         if (text.includes(keyword)) {
             return {
@@ -182,8 +180,6 @@ function checkZeroState(text: string, doc: any): HiringStatus | null {
         }
     }
 
-    // Structural empty state detection
-    // Look for job-related headers without meaningful content below them
     const jobHeaders = [
         "current openings", "teaching jobs", "job openings", "career opportunities",
         "vacancy", "openings", "available positions", "recruitment"
@@ -191,20 +187,14 @@ function checkZeroState(text: string, doc: any): HiringStatus | null {
 
     for (const header of jobHeaders) {
         if (text.includes(header)) {
-            // Check if this header appears but has very little content around it
-            // Find the position of the header in text
             const headerIndex = text.indexOf(header);
             if (headerIndex !== -1) {
-                // Get 300 characters after the header
                 const contentAfterHeader = text.substring(headerIndex + header.length, headerIndex + header.length + 300);
-
-                // Count meaningful words (excluding common stopwords)
                 const words = contentAfterHeader
                     .split(/\s+/)
-                    .filter(word => word.length > 3) // Only words longer than 3 chars
+                    .filter(word => word.length > 3)
                     .filter(word => !['the', 'and', 'for', 'with', 'this', 'that', 'from', 'are', 'will', 'your', 'can'].includes(word));
 
-                // If header found but less than 10 meaningful words follow, it's likely empty
                 if (words.length < 10) {
                     return {
                         is_hiring: false,
@@ -230,9 +220,7 @@ interface ParsedDate {
 
 function parseDates(text: string): ParsedDate[] {
     const dates: ParsedDate[] = [];
-    const currentDate = new Date();
 
-    // Regex 1: DD-MM-YYYY or DD/MM/YYYY or DD.MM.YYYY
     const pattern1 = /\b(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})\b/g;
     let match1;
     while ((match1 = pattern1.exec(text)) !== null) {
@@ -240,22 +228,15 @@ function parseDates(text: string): ParsedDate[] {
         const month = parseInt(match1[2]);
         let year = parseInt(match1[3]);
 
-        // Convert 2-digit year to 4-digit
         if (year < 100) year += 2000;
-
-        // Strict Math: Eliminate impossible dates
         if (month > 12 || month < 1 || day > 31 || day < 1) continue;
 
-        // Safety Default: DD-MM-YYYY (Indian standard)
         const parsedDate = new Date(year, month - 1, day);
-
-        // Validate the date actually exists (e.g., Feb 30 would roll over)
         if (parsedDate.getDate() !== day || parsedDate.getMonth() !== month - 1) continue;
 
         dates.push({ date: parsedDate, rawText: match1[0] });
     }
 
-    // Regex 2: DD Month YYYY (e.g., "31st December 2025")
     const pattern2 = /\b(\d{1,2})(?:st|nd|rd|th)?\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+(\d{4})\b/gi;
     let match2;
     while ((match2 = pattern2.exec(text)) !== null) {
@@ -278,21 +259,15 @@ function parseDates(text: string): ParsedDate[] {
 
 function checkDateRequirements(text: string): HiringStatus | null {
     const dates = parseDates(text);
-
-    if (dates.length === 0) {
-        // No dates found - neutral (proceed to scoring)
-        return null;
-    }
+    if (dates.length === 0) return null;
 
     const currentDate = new Date();
     const oneDayAgo = new Date(currentDate.getTime() - 24 * 60 * 60 * 1000);
     const staleCutoff = new Date(currentDate.getTime() - CONFIG.MAX_STALE_DAYS * 24 * 60 * 60 * 1000);
 
-    // Find latest date
     const sortedDates = dates.sort((a, b) => b.date.getTime() - a.date.getTime());
     const latestDate = sortedDates[0].date;
 
-    // Freshness Check
     if (latestDate < staleCutoff) {
         return {
             is_hiring: false,
@@ -301,9 +276,7 @@ function checkDateRequirements(text: string): HiringStatus | null {
         };
     }
 
-    // Deadline Check: If ALL dates are in the past (more than 1 day ago)
     const allExpired = dates.every(d => d.date < oneDayAgo);
-
     if (allExpired) {
         return {
             is_hiring: false,
@@ -323,7 +296,6 @@ function calculateScore(text: string, links: Element[]): { score: number; detail
     let score = 0;
     const details: string[] = [];
 
-    // Strong Signals (+30 each)
     for (const keyword of KEYWORDS.STRONG_SIGNALS) {
         if (text.includes(keyword)) {
             score += 30;
@@ -331,7 +303,6 @@ function calculateScore(text: string, links: Element[]): { score: number; detail
         }
     }
 
-    // Medium Signals (+10 each)
     for (const keyword of KEYWORDS.MEDIUM_SIGNALS) {
         if (text.includes(keyword)) {
             score += 10;
@@ -339,7 +310,20 @@ function calculateScore(text: string, links: Element[]): { score: number; detail
         }
     }
 
-    // NEW: Contact Methods (+5 each)
+    // NEW LOGIC: Category Signals
+    for (const keyword of KEYWORDS.CATEGORY_SIGNALS) {
+        if (text.includes(keyword)) {
+            score += 5;
+            details.push(`Category (Text): "${keyword}" (+5)`);
+
+            const isLink = links.some(link => link.textContent?.toLowerCase().includes(keyword));
+            if (isLink) {
+                score += 5;
+                details.push(`Category (Link Boost): "${keyword}" (+5)`);
+            }
+        }
+    }
+
     for (const keyword of KEYWORDS.CONTACT_METHODS) {
         if (text.includes(keyword)) {
             score += 5;
@@ -347,7 +331,6 @@ function calculateScore(text: string, links: Element[]): { score: number; detail
         }
     }
 
-    // NEW: Invitation Language (+5 each)
     for (const keyword of KEYWORDS.INVITATION_LANGUAGE) {
         if (text.includes(keyword)) {
             score += 5;
@@ -355,7 +338,6 @@ function calculateScore(text: string, links: Element[]): { score: number; detail
         }
     }
 
-    // NEW: Process Terms (+3 each)
     for (const keyword of KEYWORDS.PROCESS_TERMS) {
         if (text.includes(keyword)) {
             score += 3;
@@ -363,7 +345,6 @@ function calculateScore(text: string, links: Element[]): { score: number; detail
         }
     }
 
-    // NEW: Job Structure (+5 each)
     for (const keyword of KEYWORDS.JOB_STRUCTURE) {
         if (text.includes(keyword)) {
             score += 5;
@@ -371,7 +352,6 @@ function calculateScore(text: string, links: Element[]): { score: number; detail
         }
     }
 
-    // NEW: Specific Roles (+3 each)
     for (const keyword of KEYWORDS.SPECIFIC_ROLES) {
         if (text.includes(keyword)) {
             score += 3;
@@ -379,7 +359,6 @@ function calculateScore(text: string, links: Element[]): { score: number; detail
         }
     }
 
-    // NEW: Document Requirements (+5 each)
     for (const keyword of KEYWORDS.DOCUMENT_REQUIREMENTS) {
         if (text.includes(keyword)) {
             score += 5;
@@ -387,7 +366,6 @@ function calculateScore(text: string, links: Element[]): { score: number; detail
         }
     }
 
-    // NEW: Multiple Positions Bonus (+5 to +8)
     const positionKeywords = [
         "professor", "lecturer", "faculty", "instructor",
         "counsellor", "counselor", "manager", "coordinator",
@@ -405,9 +383,7 @@ function calculateScore(text: string, links: Element[]): { score: number; detail
         details.push(`Multiple positions (${positionCount}) (+5)`);
     }
 
-    // NEW: Email Contact Presence (+3)
     if (text.includes('@') && text.includes('.')) {
-        // Simple check for email pattern
         const emailPattern = /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i;
         if (emailPattern.test(text)) {
             score += 3;
@@ -415,18 +391,15 @@ function calculateScore(text: string, links: Element[]): { score: number; detail
         }
     }
 
-    // Anchor Link Boost
     const currentYear = new Date().getFullYear();
-    const academicYear1 = `${currentYear - 1}-${currentYear.toString().slice(-2)}`; // e.g., "2025-26"
-    const academicYear2 = `${currentYear}-${(currentYear + 1).toString().slice(-2)}`; // e.g., "2026-27"
+    const academicYear1 = `${currentYear - 1}-${currentYear.toString().slice(-2)}`;
+    const academicYear2 = `${currentYear}-${(currentYear + 1).toString().slice(-2)}`;
 
     for (const link of links) {
         const href = link.getAttribute('href')?.toLowerCase() || '';
         const linkText = link.textContent?.toLowerCase() || '';
 
-        // Check if href ends with .pdf or .jpg
         if (href.endsWith('.pdf') || href.endsWith('.jpg') || href.endsWith('.jpeg')) {
-            // Check for penalty keywords first
             let hasPenalty = false;
             for (const penaltyWord of KEYWORDS.ANCHOR_PENALTY) {
                 if (linkText.includes(penaltyWord)) {
@@ -437,7 +410,6 @@ function calculateScore(text: string, links: Element[]): { score: number; detail
                 }
             }
 
-            // If no penalty, check for boost
             if (!hasPenalty) {
                 const hasKeyword = KEYWORDS.ANCHOR_BOOST_KEYWORDS.some(kw => linkText.includes(kw));
                 const hasYear = linkText.includes(currentYear.toString()) ||
@@ -456,30 +428,24 @@ function calculateScore(text: string, links: Element[]): { score: number; detail
 }
 
 // ============================================================================
-// MAIN LOGIC ORCHESTRATOR
+// MAIN EXPORT
 // ============================================================================
 
 export function analyzeCareerPage(html: string): HiringStatus {
     try {
-        // PHASE 1: Preprocessing
         const { cleanText, doc, links } = preprocessHTML(html);
 
-        // PHASE 2: Negative Filtering
         const negativeResult = checkNegativeFilter(cleanText);
         if (negativeResult) return negativeResult;
 
-        // PHASE 3: Zero State Check
         const zeroStateResult = checkZeroState(cleanText, doc);
         if (zeroStateResult) return zeroStateResult;
 
-        // PHASE 4: Date Analysis
         const dateResult = checkDateRequirements(cleanText);
         if (dateResult) return dateResult;
 
-        // PHASE 5: Scoring Engine
         const { score, details } = calculateScore(cleanText, links);
 
-        // Final Threshold Check
         const isHiring = score >= CONFIG.SCORE_THRESHOLD;
 
         return {
@@ -490,7 +456,7 @@ export function analyzeCareerPage(html: string): HiringStatus {
             confidence_score: score
         };
 
-    } catch (error) {
+    } catch (error: any) {
         return {
             is_hiring: false,
             reason: `Analysis error: ${error.message}`,

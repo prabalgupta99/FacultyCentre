@@ -1,0 +1,167 @@
+[dotenv@17.2.3] injecting env (4) from .env.local -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (1) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+--- Fetching Manual Feedback ---
+Scanning 1000 colleges for feedback...n
+
+🏫 Chotanagpur Law College, Ranchi (ID: 2512)
+   ✅ [2026-01-23] Score: -100 - User Status: Valid
+      Comment: "Since this is a form, and not a job post. Hence correct"
+   ❌ [2026-02-28] Score: -100 - User Status: Invalid
+      Comment: "This website has the form directly. I will also attach a screenshot of this. This does not include any hiring post as such. It is just opening a form-like interface where you can fill in the application. There is no data point which shows that this college is currently hiring, so it should ideally be tagged as not hiring. "
+      📸 Screenshot attached
+
+🏫 Vignan Institute of Law (VIL), Guntur District, Andhra Pradesh (ID: 2043)
+   ✅ [2026-02-28] Score: 136 - User Status: Valid
+      Comment: "Since there is a card which shows that the college is basically inviting people for a walk-in interview, that means this college is hiring, but it needs to be cautious because there is no last date mentioned. Need to figure it out, like if last year it is not mentioned and the card is still there, should the college be in place as hiring? "
+      📸 Screenshot attached
+
+🏫 Department of Law, National Forensic Science University (NFSU), Delhi - Off campus (ID: 3389)
+   ❌ [2026-02-28] Score: -100 - User Status: Invalid
+      Comment: "Since there are a lot of hiring-related posts, this should be marked as hiring "
+      📸 Screenshot attached
+
+🏫 Department of Law, National Forensic Science University (NFSU), Ponda, Goa (ID: 4929)
+   ✅ [2026-02-28] Score: -100 - User Status: Valid
+      Comment: "Since there is no hiring post on this page, it is correctly marked as not hiring. "
+      📸 Screenshot attached
+
+🏫 Department of Law, National Forensic Science University (NFSU), Agartala, Tripura (ID: 4930)
+   ✅ [2026-02-28] Score: -100 - User Status: Valid
+      Comment: "Since there is no hiring-related post here, it is correctly marked as not hiring. "
+      📸 Screenshot attached
+
+🏫 Department of Law, National Forensic Science University (NFSU), Bhopal, Madhya Pradesh (ID: 4931)
+   ✅ [2026-02-28] Score: -100 - User Status: Valid
+      Comment: "Since there is no hiring-related post, it is correctly marked as not hiring. "
+      📸 Screenshot attached
+
+🏫 Department of Law, National Forensic Science University (NFSU), Pune Campus, Akurdi, Maharashtra (ID: 4932)
+   ✅ [2026-02-28] Score: -100 - User Status: Valid
+      Comment: "Since there is no hiring-related post on this website, it is correctly marked as not hiring. "
+
+🏫 Department of Law, National Forensic Science University (NFSU), Guwahati, Assam (ID: 4933)
+   ✅ [2026-02-28] Score: -100 - User Status: Valid
+      Comment: "Since there is no hiring-related post on this website, it is correctly marked as not hiring. "
+
+🏫 Department of Law, National Forensic Science University (NFSU), Pangei, Manipur (ID: 4934)
+   ✅ [2026-02-28] Score: -100 - User Status: Valid
+      Comment: "Since there is no hiring-related post on this website, it is correctly marked as not hiring. "
+
+🏫 Department of Law, National Forensic Science University (NFSU), Dharwad, Karnataka (ID: 4935)
+   ✅ [2026-02-28] Score: -100 - User Status: Valid
+      Comment: "Since there is no hiring-related post on this website, it is correctly marked as not hiring. "
+
+🏫 National Forensic Sciences University (Transit Campus), Bhubaneswar, Odisha (ID: 4936)
+   ✅ [2026-02-28] Score: -100 - User Status: Valid
+      Comment: "Since there is no hiring-related post on this website, it is correctly marked as not hiring. "
+
+🏫 Department of Law, National Forensic Science University (NFSU), Chennai, Tamil Nadu (ID: 4937)
+   ✅ [2026-02-28] Score: -100 - User Status: Valid
+      Comment: "Since there is no hiring-related post on this website, it is correctly marked as not hiring. "
+
+🏫 Department of Law, National Forensic Science University (NFSU), Jaipur, Rajasthan (ID: 4938)
+   ✅ [2026-02-28] Score: -100 - User Status: Valid
+      Comment: "Since there is no hiring-related post on this website, it is correctly marked as not hiring. "
+
+🏫 Department of Law, National Forensic Science University (NFSU), Nagpur, Maharashtra (ID: 4939)
+   ✅ [2026-02-28] Score: -100 - User Status: Valid
+      Comment: "Since there is no hiring-related post on this website, it is correctly marked as not hiring. "
+
+🏫 Department of Law, National Forensic Science University (NFSU), Raipur, Chhattisgarh (ID: 4940)
+   ✅ [2026-02-28] Score: -100 - User Status: Valid
+      Comment: "Since there is no hiring-related post on this website, it is correctly marked as not hiring. "
+
+🏫 Gitarattan International Business School, Madhuban Chowk, Rohini, Delhi (ID: 3378)
+   ❌ [2026-02-28] Score: 44 - User Status: Invalid
+      Comment: "Since this page does not explicitly mention that it is hiring for any post, it is just showing the job description and a form to be filled. It should not be marked as hiring. "
+      📸 Screenshot attached
+
+🏫 Rajiv Gandhi School of Intelectual Property Law, Kharagpur (ID: 4880)
+   ❌ [2026-02-28] Score: 15 - User Status: Invalid
+      Comment: "So in the website, list a lot of rolling advertisements with the last date of 31st December 2026; therefore, this should be shown as a hiring college. "
+      📸 Screenshot attached
+
+🏫 Centre of Excellence in Public Policy, Law and Governance, Kharagpur, West Bengal (ID: 4941)
+   ✅ [2026-02-28] Score: -50 - User Status: Valid
+      Comment: "Since this page does not have any hiring post explicitly mentioned, it is correctly marked as not hiring. "
+      📸 Screenshot attached
+
+🏫 Symbiosis Law School, Nagpur (ID: 3316)
+   ✅ [2026-02-28] Score: -100 - User Status: Valid
+      Comment: "Since this page does not have any hiring post mentioned explicitly, it is correctly marked as not hiring. "
+      📸 Screenshot attached
+
+🏫 Symbiosis Law School, Hyderabad (ID: 3798)
+   ✅ [2026-02-28] Score: 19 - User Status: Valid
+      Comment: "Since this page does not have any explicit hiring post, it is correctly marked as not hiring. "
+      📸 Screenshot attached
+
+🏫 Faculty of Law, The ICFAI University, Baddi, Solan (ID: 2463)
+   ✅ [2026-02-28] Score: -39 - User Status: Valid
+      Comment: "Since this page does not have any hiring posts explicitly mentioned, it is correctly marked as not hiring. "
+      📸 Screenshot attached
+
+🏫 School of Legal Studies, CGC University, Mohali (ID: 3492)
+   ✅ [2026-02-28] Score: 92 - User Status: Valid
+      Comment: "Since this page has "hiring post" explicitly mentioned, it is correctly marked as hiring. "
+      📸 Screenshot attached
+
+🏫 School of Law, Dhanalakshmi Srinivasan University, Perambalur Campus, Tamil Nadu (ID: 3750)
+   ✅ [2026-02-28] Score: undefined - User Status: Valid
+      Comment: "Since this pair does not have any explicit hiring position, it is correctly marked as not hiring. "
+      📸 Screenshot attached
+
+🏫 University Institute of Law, Guru Nanak University, Khanpur, Telangana (ID: 3805)
+   ✅ [2026-02-28] Score: 45 - User Status: Valid
+      Comment: "Yes, this is correctly marked because it has an explicit hiring post. "
+      📸 Screenshot attached
+
+🏫 Accurate College of Law, Greater Noida, U.P (ID: 3951)
+   ✅ [2026-02-28] Score: 42 - User Status: Valid
+      Comment: "Yes, it is correctly marked as hiring because it has x+8 hiring posts. "
+      📸 Screenshot attached
+
+🏫 JC College of Law, Bahadurgarh, Bahadurgarh, Haryana (ID: 4942)
+   ✅ [2026-02-28] Score: 0 - User Status: Valid
+      Comment: "The web page has just the Google form or a form, so it is correctly marked as not hiring. The web page has just the Google form or a form, so it is correctly marked as not hiring. "
+      📸 Screenshot attached
+
+🏫 Univ. College of Law, North Bengal University, Rajarammohanpur (ID: 4887)
+   ✅ [2026-02-28] Score: 27 - User Status: Valid
+      Comment: "Since this website clearly shows "no record found" in the openings page, it was correctly marked as not hiring. "
+      📸 Screenshot attached
+
+🏫 School of Legal Studies, Kochi, Kerala (ID: 4924)
+   ❌ [2026-02-28] Score: 39 - User Status: Invalid
+      Comment: "This webpage has a lot of openings, so it should be manga hiring. Even the last date which is mentioned for application also falls within the current date, so therefore it should be marked as hiring. "
+      📸 Screenshot attached
+
+🏫 School of Law, Galgotias University, Greater Noida (ID: 4166)
+   ❌ [2026-02-28] Score: -50 - User Status: Invalid
+      Comment: "Since there is a hiring post explicitly mentioned on the page in the screenshot below, it should be marked as hiring, so it is not marked correctly right now. "
+      📸 Screenshot attached
+
+🏫 School of Law, SVKM’s NMIMS, Navi Mumbai (ID: 3313)
+   ✅ [2026-02-28] Score: 0 - User Status: Valid
+      Comment: "Since this page does not have an extra set hiring post, it is correctly marked as not hiring. "
+      📸 Screenshot attached
+
+🏫 School of Law, SVKM’s NMIMS, Dhule (ID: 3314)
+   ❌ [2026-02-28] Score: 0 - User Status: Invalid
+      Comment: "Since there are two open jobs mentioned here, it should be marked as Hiring. "
+      📸 Screenshot attached
+
+🏫 Faculty of Law, Adamas University, 24 Pargans (North), Kolkata, West Bengal (ID: 4853)
+   ✅ [2026-02-28] Score: 128 - User Status: Valid
+      Comment: "Since there are hiring posts mentioned, they were correctly marked as hiring. "
+      📸 Screenshot attached
+
+🏫 School of Law, SVKM’s NMIMS, Hyderabad (ID: 3797)
+   ✅ [2026-02-28] Score: 0 - User Status: Valid
+      Comment: "Since there are no hiring posts, it is correctly marked as not hiring. "
+      📸 Screenshot attached
+
+--- Summary ---
+Total Feedback Entries: 34
+Flagged as Incorrect: 7
+----------------
