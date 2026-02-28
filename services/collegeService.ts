@@ -186,11 +186,15 @@ export const analyzeCollegeCareerPage = async (url: string): Promise<{ isHiring:
       body: { url }
     });
 
-    if (error) throw error;
+    if (error) {
+      console.error("Supabase Edge Function 'analyze-careers' returned an error:", error);
+      throw error;
+    }
     return data;
   } catch (error: any) {
-    console.error("Error analyzing career page:", error);
-    return { isHiring: false, score: 0, reasons: [], error: error.message };
+    console.error("Error analyzing career page (analyzeCollegeCareerPage):", error);
+    console.dir(error);
+    return { isHiring: false, score: 0, reasons: [], error: error.message || 'Unknown edge function error' };
   }
 };
 

@@ -97,6 +97,8 @@ const LogicTester: React.FC = () => {
 
                 analysisResult = await analyzeCollegeCareerPage(college.careerPageUrl);
 
+                console.log(`[LogicTester] Edge function mapping for ${college.name}:`, analysisResult);
+
                 if (analysisResult.error) {
                     fetchStatus = 'error';
                 }
