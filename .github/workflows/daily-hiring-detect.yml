@@ -2,6 +2,8 @@
 # First use: Run workflow manually with limit=30 and dry_run=true. Only after he approves, schedule it.
 name: Daily Hiring Detection
 on:
+  push:
+    branches: [jev-detector]   # temporary: lets the dry run start from the branch. Remove before merge.
   schedule:
     - cron: '0 0 * * *'   # 5:30 AM IST. Leave this block out of the file until the manual dry run is approved.
   workflow_dispatch:
@@ -24,7 +26,7 @@ jobs:
         run: |
           curl -fsS "$SUPABASE_URL/rest/v1/colleges?select=id&limit=1" -H "apikey: $SUPABASE_SERVICE_KEY" -H "Authorization: Bearer $SUPABASE_SERVICE_KEY" > /dev/null
       - name: Sync Google Sheet to Supabase
-        if: github.event.inputs.dry_run != 'true'
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run == 'false'
         continue-on-error: true
         env: { SUPABASE_URL: '${{ secrets.SUPABASE_URL }}', SUPABASE_SERVICE_KEY: '${{ secrets.SUPABASE_SERVICE_KEY }}', GOOGLE_SHEET_CSV_URL: '${{ secrets.GOOGLE_SHEET_CSV_URL }}' }
         run: npx tsx scripts/sync-spreadsheet.ts
@@ -42,8 +44,8 @@ jobs:
           TYPESAFE_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY || secrets.TYPESAFE_API_KEY }}
           JEV_ENDPOINT: ${{ secrets.AI_GATEWAY_API_KEY && 'https://ai-gateway.vercel.sh/typesafe/v1/systemone' || '' }}
           JEV_MODEL: ${{ secrets.AI_GATEWAY_API_KEY && 'typesafe-ai/jev' || '' }}
-          LIMIT: ${{ github.event.inputs.limit }}
-          DRY: ${{ github.event.inputs.dry_run }}
+          LIMIT: ${{ github.event.inputs.limit || '30' }}
+          DRY: ${{ github.event_name == 'push' && 'true' || github.event.inputs.dry_run }}
         run: |
           ARGS=""
           [ -n "$LIMIT" ] && ARGS="$ARGS --limit $LIMIT"
