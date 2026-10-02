@@ -23,6 +23,7 @@ async function call(state: string, questions: object): Promise<any> {
   if (MOCK) return mockAnswer(state, questions);
   for (let attempt = 0; attempt < 4; attempt++) {
     const gap = Number(process.env.JEV_MIN_GAP_MS || 2500); const wait = lastCall + gap - Date.now(); if (wait > 0) await new Promise(r => setTimeout(r, wait)); lastCall = Date.now();
+    const t0 = Date.now();
     const res = await fetch(ENDPOINT, {
       method: 'POST',
       headers: { Authorization: `Bearer ${process.env.TYPESAFE_API_KEY}`, 'Content-Type': 'application/json' },
@@ -31,6 +32,7 @@ async function call(state: string, questions: object): Promise<any> {
     });
     if (res.status === 429 || res.status === 529) { const ra = Number(res.headers.get('retry-after')) || 0; await new Promise(r => setTimeout(r, Math.min(60000, Math.max(ra * 1000, 3000 * 2 ** attempt)))); continue; }
     if (!res.ok) { const body = (await res.text().catch(() => '')).replace(/\s+/g, ' ').slice(0, 200); throw new Error(`Jev ${res.status} ${body}`); }
+    console.log(`JEVCALL ${Date.now() - t0}ms status=${res.status} attempt=${attempt}`);
     return (await res.json()).answers;
   }
   throw new Error('Jev rate limited');
@@ -38,16 +40,14 @@ async function call(state: string, questions: object): Promise<any> {
 
 /** Static answers are cached by notice-text hash; status is asked fresh (depends on today) and only when needed. */
 export async function judge(n: Notice, today: string, institution = ''): Promise<Answers> {
-  const staticKey = hash(institution + '|' + n.context);
-  let st = cache[staticKey];
-  if (st) stats.cacheHits++; else { st = await call(`Institution: ${institution || 'unknown'}\nNotice: ${n.context}`, STATIC_QUESTIONS); cache[staticKey] = st; }
-  const a: Answers = { is_job_notice: st.is_job_notice, stream: st.stream, role_type: st.role_type };
-  const worthStatus = st.is_job_notice.noul >= 0.4 && st.stream.choice !== 'other';
-  if (worthStatus) {
-    const s = await call(`Today's date: ${today}.\nInstitution: ${institution || 'unknown'}\nNotice: ${n.context}\nDates found in the notice: ${n.dates.join('; ') || 'none'}`, STATUS_QUESTION);
-    a.status = s.status;
+  // One call per notice with all four questions (fewer calls: free models are rate limited). Cached by text + today.
+  const key = hash(institution + '|' + n.context + '|' + today);
+  let st = cache[key];
+  if (st) stats.cacheHits++; else {
+    st = await call(`Today's date: ${today}.\nInstitution: ${institution || 'unknown'}\nNotice: ${n.context}\nDates found in the notice: ${n.dates.join('; ') || 'none'}`, { ...STATIC_QUESTIONS, ...STATUS_QUESTION });
+    cache[key] = st;
   }
-  return a;
+  return { is_job_notice: st.is_job_notice, stream: st.stream, role_type: st.role_type, status: st.status } as any;
 }
 
 // ---- offline mock: crude rules shaped like real answers, used only to test plumbing ----
