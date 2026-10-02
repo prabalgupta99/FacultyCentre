@@ -4,7 +4,7 @@ import { extractNotices, prefilter, pageReadable, type Notice } from './extract'
 import { decide, type Judged, type Status } from './decide';
 import { judge } from './jev';
 
-const MAX_NOTICES = Number(process.env.MAX_NOTICES || 8);
+const MAX_NOTICES = Number(process.env.MAX_NOTICES || 5);
 const LINK_HINT = /(career|recruit|vacanc|opening|jobs?\b|walk.?in|advertis|notification|join.?us)/i;
 const NOT_PAGE = /(\/people|\/faculty\/|\/staff|\/team|login|signin|register)/i;
 const SKIP_LINK = /\.(jpg|jpeg|png|gif|zip|docx?|xlsx?)(\?|$)|^(mailto|tel|javascript):/i;
