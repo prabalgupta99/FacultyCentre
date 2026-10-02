@@ -27,13 +27,13 @@ async function main() {
   if (!(await preflight())) { console.error('Jev preflight failed, stopping before any page work.'); process.exit(2); }
   const browser = await chromium.launch();
   const tally: Record<string, number> = {}; let done = 0; const pageCache = new Map<string, { http: number | null; html: string }>(); const verdicts = new Map<string, any>();
-  const DEADLINE = Date.now() + Number(process.env.RUN_MAX_MIN || 40) * 60000;
+  const DEADLINE = Date.now() + Number(process.env.RUN_MAX_MIN || 95) * 60000;
   for (const c of (colleges ?? []).slice(0, LIMIT)) {
     if (Date.now() > DEADLINE) { console.log('DEADLINE reached, stopping early'); break; }
     let status: Status = 'unknown', why = '', ev: Notice | undefined, answers: any, role: string | undefined, http: number | null = null, err: string | null = null;
     try {
       let v = verdicts.get(c.career_page_url);
-      if (!v) { v = await Promise.race([analyzeUrl(browser, c.career_page_url, c.college_name_place, TODAY), new Promise<any>((_, rej) => setTimeout(() => rej(new Error('row timeout 180s')), 180000))]); verdicts.set(c.career_page_url, v); }
+      if (!v) { v = await Promise.race([analyzeUrl(browser, c.career_page_url, c.college_name_place, TODAY), new Promise<any>((_, rej) => setTimeout(() => rej(new Error('row timeout 300s')), 300000))]); verdicts.set(c.career_page_url, v); }
       ({ status, why, evidence: ev, answers, role } = v as any); http = v.http; if (v.err) err = v.err;
     } catch (e: any) { err = String(e.message).slice(0, 200); why = 'error'; }
     tally[status] = (tally[status] ?? 0) + 1;
