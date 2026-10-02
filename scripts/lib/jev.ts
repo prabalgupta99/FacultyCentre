@@ -26,7 +26,7 @@ async function call(state: string, questions: object): Promise<any> {
       body: JSON.stringify({ state, model: process.env.JEV_MODEL || MODEL, questions }),
     });
     if (res.status === 429 || res.status === 529) { await new Promise(r => setTimeout(r, 1000 * 2 ** attempt)); continue; }
-    if (!res.ok) throw new Error(`Jev ${res.status}`);
+    if (!res.ok) { const body = (await res.text().catch(() => '')).replace(/\s+/g, ' ').slice(0, 200); throw new Error(`Jev ${res.status} ${body}`); }
     return (await res.json()).answers;
   }
   throw new Error('Jev rate limited');
@@ -59,4 +59,15 @@ function mockAnswer(state: string, questions: any) {
     out.status = { type: 'choice', choice: ds.length && ds.every(d => d < today) ? 'closed' : 'unclear', confidence: 0.7 };
   }
   return out;
+}
+
+/** One tiny call before a run. Prints endpoint, model, whether a key is present (length only, never the value) and the answer or the error body. */
+export async function preflight(): Promise<boolean> {
+  const key = process.env.TYPESAFE_API_KEY || '';
+  console.log(`PREFLIGHT endpoint=${ENDPOINT} model=${process.env.JEV_MODEL || MODEL} keyLength=${key.length} mock=${MOCK}`);
+  if (MOCK) return true;
+  try {
+    const a = await call('Notice: Applications are invited for the post of Assistant Professor (Law). Last date 30 Nov 2099.', { is_job_notice: STATIC_QUESTIONS.is_job_notice });
+    console.log('PREFLIGHT ok ' + JSON.stringify(a).slice(0, 200)); return true;
+  } catch (e: any) { console.log('PREFLIGHT FAILED ' + String(e.message).slice(0, 300)); return false; }
 }
