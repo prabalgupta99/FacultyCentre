@@ -23,14 +23,20 @@ async function main() {
   const { data: colleges, error } = await q;
   if (error) throw error;
   const browser = await chromium.launch();
-  const tally: Record<string, number> = {}; let done = 0;
+  const tally: Record<string, number> = {}; let done = 0; const pageCache = new Map<string, { http: number | null; html: string }>();
   for (const c of (colleges ?? []).slice(0, LIMIT)) {
     let status: Status = 'unknown', why = '', ev: Notice | undefined, answers: any, role: string | undefined, http: number | null = null, err: string | null = null;
     try {
       const page = await browser.newPage();
-      const resp = await page.goto(c.career_page_url, { waitUntil: 'networkidle', timeout: 45000 });
-      http = resp?.status() ?? null;
-      const html = await page.content(); await page.close();
+      const cached = pageCache.get(c.career_page_url);
+      let html: string;
+      if (cached) { http = cached.http; html = cached.html; } else {
+        const resp = await page.goto(c.career_page_url, { waitUntil: 'domcontentloaded', timeout: 40000 });
+        http = resp?.status() ?? null;
+        await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
+        html = await page.content(); pageCache.set(c.career_page_url, { http, html });
+      }
+      await page.close();
       const readable = pageReadable(http, html);
       const notices = readable ? extractNotices(html, c.career_page_url).filter(prefilter).slice(0, MAX_NOTICES) : [];
       const judged: Judged[] = [];
@@ -46,7 +52,8 @@ async function main() {
       evidence_title: ev?.title ?? null, evidence_url: ev?.link ?? null, evidence_json: answers ? { ...answers, role } : null,
       open_streams: status === 'hiring' ? ['law'] : [],
     });
-    console.log(`${c.id} ${c.college_name_place} -> ${status} (${why}) http=${http}`);
+    console.log(`${c.id} ${c.college_name_place} -> ${status} (${why}) http=${http}${err ? ' err=' + err.slice(0, 120) : ''}`);
+    console.log('ROW ' + JSON.stringify({ id: c.id, s: status, why: why.slice(0, 80), http, err: err?.slice(0, 120), ev: ev ? { t: ev.title.slice(0, 160), d: ev.dates?.[0] } : null, role }));
     if (!DRY) { const { error: e2 } = await supabase.from('colleges').update(update).eq('id', c.id); if (e2) console.error('write failed', e2.message); }
     done++;
     if (done % 25 === 0) saveCache();
