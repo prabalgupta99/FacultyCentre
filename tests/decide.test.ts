@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { decide } from '../scripts/lib/decide';
 import { extractNotices, DATE_RE } from '../scripts/lib/extract';
 
-const n = { title: 't', context: 'c', link: null, dates: [] };
+const n = { title: 't', context: 'Assistant Professor post', link: null, dates: [] };
 const a = (noul: number, stream: string, status: string, sc = 0.9) => ({ is_job_notice: { noul }, stream: { choice: stream, confidence: sc }, role_type: { choice: 'faculty_regular', confidence: 0.9 }, status: { choice: status, confidence: 0.9 } });
 
 test('open law notice => hiring', () => assert.equal(decide([{ n, a: a(0.95, 'law', 'open') }], true).status, 'hiring'));
@@ -29,3 +29,7 @@ test('REGRESSION Vignan: non-teaching notice must not be hiring', () => assert.n
 test('REGRESSION Chotanagpur: application-form dropdown is not a notice', async () => {
   const { prefilter } = await import('../scripts/lib/extract');
   assert.equal(prefilter({ title: 'Position Applied For: * --Select-- Assistant Professor (Law) Assistant Professor (Management)', context: 'Position Applied For: * --Select-- Assistant Professor (Law) Assistant Professor (Management) Apply now vacancy', link: null, dates: [] }), false); });
+test('REGRESSION generic recruitment heading is not a lead', () => {
+  const g = { title: 'All Recruitment Notifications', context: 'All Recruitment Notifications', link: null, dates: [] };
+  const ans: any = { ...a(0.8, 'law', 'open'), raw: { law: 0.6, open: 0.7, faculty: 0.6 } };
+  assert.ok(!(decide([{ n: g, a: ans }], true) as any).lead); });
