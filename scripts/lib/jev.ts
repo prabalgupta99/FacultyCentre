@@ -26,6 +26,7 @@ async function call(state: string, questions: object): Promise<any> {
     const res = await fetch(ENDPOINT, {
       method: 'POST',
       headers: { Authorization: `Bearer ${process.env.TYPESAFE_API_KEY}`, 'Content-Type': 'application/json' },
+      signal: AbortSignal.timeout(45000),
       body: JSON.stringify({ state, model: activeModel || process.env.JEV_MODEL || MODEL, questions }),
     });
     if (res.status === 429 || res.status === 529) { const ra = Number(res.headers.get('retry-after')) || 0; await new Promise(r => setTimeout(r, Math.min(60000, Math.max(ra * 1000, 3000 * 2 ** attempt)))); continue; }
