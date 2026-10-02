@@ -46,7 +46,7 @@ jobs:
           # Uses the Vercel AI Gateway key if that secret exists, else the TypeSafe key.
           TYPESAFE_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY || secrets.TYPESAFE_API_KEY }}
           JEV_ENDPOINT: ${{ secrets.AI_GATEWAY_API_KEY && 'https://ai-gateway.vercel.sh/typesafe/v1/systemone' || '' }}
-          JEV_MODEL: ${{ secrets.AI_GATEWAY_API_KEY && 'typesafe-ai/jev' || '' }}
+          JEV_MODELS: ${{ secrets.AI_GATEWAY_API_KEY && 'typesafe-ai/jev,convaiinnovations/laya-free,convaiinnovations/laya' || '' }}
           LIMIT: ${{ github.event.inputs.limit || (github.event_name == 'push' && '150') || '' }}
           DRY: ${{ github.event_name == 'push' && 'true' || github.event.inputs.dry_run }}
         run: |
