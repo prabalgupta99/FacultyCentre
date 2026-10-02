@@ -50,8 +50,8 @@ export async function analyzeUrl(browser: Browser, url: string, name: string, to
     if (readable) {
       const notices = extractNotices(html, current).filter(prefilter).slice(0, MAX_NOTICES);
       v.notices += notices.length;
-      for (const n of notices) { const a0 = await judge(n, today, name); judgedAll.push({ n, a: a0 }); v.jevCalls++; { const x: any = a0; console.log('NOTICE ' + JSON.stringify({ t: n.title.slice(0, 70), job: x.is_job_notice?.noul, st: x.stream?.choice + ':' + x.stream?.confidence, ro: x.role_type?.choice, su: x.status?.choice + ':' + x.status?.confidence, raw: x.raw })); } if ((decide(judgedAll, true) as any).status === 'hiring') break; }
-      const d: any = decide(judgedAll, true);
+      for (const n of notices) { const a0 = await judge(n, today, name); judgedAll.push({ n, a: a0 }); v.jevCalls++; { const x: any = a0; console.log('NOTICE ' + JSON.stringify({ t: n.title.slice(0, 70), job: x.is_job_notice?.noul, st: x.stream?.choice + ':' + x.stream?.confidence, ro: x.role_type?.choice, su: x.status?.choice + ':' + x.status?.confidence, raw: x.raw })); } if ((decide(judgedAll, true, name) as any).status === 'hiring') break; }
+      const d: any = decide(judgedAll, true, name);
       if (d.status === 'hiring') { Object.assign(v, { status: 'hiring', why: d.why, evidence: d.evidence, answers: d.answers, role: d.role }); return v; }
       if (first) for (const l of hintLinks(html, current, seen)) { queue.push(l); seen.add(l); }
     }
@@ -59,7 +59,7 @@ export async function analyzeUrl(browser: Browser, url: string, name: string, to
     const next = queue.shift(); if (!next) break;
     current = next; v.via.push(next);
   }
-  const d: any = decide(judgedAll, anyReadable);
+  const d: any = decide(judgedAll, anyReadable, name);
   if (v.err && !anyReadable) { v.why = 'error'; return v; }
   Object.assign(v, { status: d.status, why: d.why, ...(d.lead ? { evidence: d.evidence, answers: d.answers, role: d.role } : {}) });
   return v;
