@@ -61,6 +61,6 @@ export async function analyzeUrl(browser: Browser, url: string, name: string, to
   }
   const d: any = decide(judgedAll, anyReadable);
   if (v.err && !anyReadable) { v.why = 'error'; return v; }
-  Object.assign(v, { status: d.status, why: d.why });
+  Object.assign(v, { status: d.status, why: d.why, ...(d.lead ? { evidence: d.evidence, answers: d.answers, role: d.role } : {}) });
   return v;
 }
