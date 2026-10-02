@@ -1,0 +1,50 @@
+# DRAFT. Not applied. Replaces the old "Daily Database Sync & Career Analysis" analyze step.
+# First use: Run workflow manually with limit=30 and dry_run=true. Only after he approves, schedule it.
+name: Daily Hiring Detection
+on:
+  schedule:
+    - cron: '0 0 * * *'   # 5:30 AM IST. Leave this block out of the file until the manual dry run is approved.
+  workflow_dispatch:
+    inputs:
+      limit: { description: 'Max colleges (blank = all). Use 30 for the first test.', required: false }
+      dry_run: { description: 'true = no database writes', required: false, default: 'true' }
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20', cache: 'npm' }
+      - run: npm install --no-audit --no-fund
+      - run: npx tsx --test tests/decide.test.ts          # logic tests must pass before any run
+      - run: npx playwright install --with-deps chromium
+      - name: Keep database awake (free plan)
+        env: { SUPABASE_URL: '${{ secrets.SUPABASE_URL }}', SUPABASE_SERVICE_KEY: '${{ secrets.SUPABASE_SERVICE_KEY }}' }
+        run: curl -fsS "$SUPABASE_URL/rest/v1/colleges?select=id&limit=1" -H "apikey: $SUPABASE_SERVICE_KEY" -H "Authorization: Bearer $SUPABASE_SERVICE_KEY" > /dev/null
+      - name: Sync Google Sheet to Supabase
+        if: github.event.inputs.dry_run != 'true'
+        continue-on-error: true
+        env: { SUPABASE_URL: '${{ secrets.SUPABASE_URL }}', SUPABASE_SERVICE_KEY: '${{ secrets.SUPABASE_SERVICE_KEY }}', GOOGLE_SHEET_CSV_URL: '${{ secrets.GOOGLE_SHEET_CSV_URL }}' }
+        run: npx tsx scripts/sync-spreadsheet.ts
+      - name: Restore Jev answer cache
+        uses: actions/cache@v4
+        with: { path: .jev-cache.json, key: jev-cache-${{ github.run_id }}, restore-keys: 'jev-cache-' }
+      - name: Detect hiring (Jev)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          # Uses the Vercel AI Gateway key if that secret exists, else the TypeSafe key.
+          TYPESAFE_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY || secrets.TYPESAFE_API_KEY }}
+          JEV_ENDPOINT: ${{ secrets.AI_GATEWAY_API_KEY && 'https://ai-gateway.vercel.sh/typesafe/v1/systemone' || '' }}
+          JEV_MODEL: ${{ secrets.AI_GATEWAY_API_KEY && 'typesafe-ai/jev' || '' }}
+          LIMIT: ${{ github.event.inputs.limit }}
+          DRY: ${{ github.event.inputs.dry_run }}
+        run: |
+          ARGS=""
+          [ -n "$LIMIT" ] && ARGS="$ARGS --limit $LIMIT"
+          [ "$DRY" = "true" ] && ARGS="$ARGS --dry-run"
+          npx tsx scripts/detect-hiring.ts $ARGS | tee detect.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: detect-log, path: detect.log }
