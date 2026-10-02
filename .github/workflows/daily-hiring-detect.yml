@@ -21,7 +21,8 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Keep database awake (free plan)
         env: { SUPABASE_URL: '${{ secrets.SUPABASE_URL }}', SUPABASE_SERVICE_KEY: '${{ secrets.SUPABASE_SERVICE_KEY }}' }
-        run: curl -fsS "$SUPABASE_URL/rest/v1/colleges?select=id&limit=1" -H "apikey: $SUPABASE_SERVICE_KEY" -H "Authorization: Bearer $SUPABASE_SERVICE_KEY" > /dev/null
+        run: |
+          curl -fsS "$SUPABASE_URL/rest/v1/colleges?select=id&limit=1" -H "apikey: $SUPABASE_SERVICE_KEY" -H "Authorization: Bearer $SUPABASE_SERVICE_KEY" > /dev/null
       - name: Sync Google Sheet to Supabase
         if: github.event.inputs.dry_run != 'true'
         continue-on-error: true
@@ -29,7 +30,10 @@ jobs:
         run: npx tsx scripts/sync-spreadsheet.ts
       - name: Restore Jev answer cache
         uses: actions/cache@v4
-        with: { path: .jev-cache.json, key: jev-cache-${{ github.run_id }}, restore-keys: 'jev-cache-' }
+        with:
+          path: .jev-cache.json
+          key: jev-cache-${{ github.run_id }}
+          restore-keys: jev-cache-
       - name: Detect hiring (Jev)
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
