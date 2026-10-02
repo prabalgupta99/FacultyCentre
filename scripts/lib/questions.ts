@@ -49,3 +49,23 @@ export const MIN_CONFIDENCE = 0.6; // Choice answers below this count as 'unclea
 export const MIN_NOUL = 0.7;       // is_job_notice must reach this to count as a job
 export const NOUL_MAYBE = 0.4;     // between NOUL_MAYBE and MIN_NOUL = uncertain, makes the college 'unknown'
 export const MODEL = 'jev-latest';
+
+// Boolean (noul) questions. Models answer these reliably; choice questions came back with tiny confidences and invented labels.
+export const BOOL_QUESTIONS = {
+  is_job_notice: STATIC_QUESTIONS.is_job_notice,
+  is_law: {
+    type: 'noul',
+    instructions: 'Is the post in law (law, legal studies, LLB/LLM, a School or Department of Law, or legal research)? If the notice names no subject and the institution is a law university or law school, answer true.',
+    criteria: { true: 'The post is in law or legal studies, or the notice covers many departments and law is one of them', false: 'The post is in another subject (engineering, science, management, commerce, medicine, languages) or is administrative' },
+  },
+  is_open: {
+    type: 'noul',
+    instructions: "Given today's date stated in the text, is this notice still accepting applications right now?",
+    criteria: { true: 'The last date has not passed, or no last date is given and the notice is recent and not marked closed', false: 'The last date has passed, applications are closed, or it is a shortlist, eligibility list, interview schedule or result' },
+  },
+  is_faculty: {
+    type: 'noul',
+    instructions: 'Is this a teaching faculty post (Assistant, Associate or full Professor, or guest, visiting, ad hoc or contractual faculty)?',
+    criteria: { true: 'Teaching faculty post', false: 'Research project, administrative, library, technical or support post' },
+  },
+} as const;
