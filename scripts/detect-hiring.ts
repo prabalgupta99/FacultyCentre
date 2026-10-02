@@ -33,7 +33,7 @@ async function main() {
     let status: Status = 'unknown', why = '', ev: Notice | undefined, answers: any, role: string | undefined, http: number | null = null, err: string | null = null;
     try {
       let v = verdicts.get(c.career_page_url);
-      if (!v) { v = await analyzeUrl(browser, c.career_page_url, c.college_name_place, TODAY); verdicts.set(c.career_page_url, v); }
+      if (!v) { v = await Promise.race([analyzeUrl(browser, c.career_page_url, c.college_name_place, TODAY), new Promise<any>((_, rej) => setTimeout(() => rej(new Error('row timeout 120s')), 120000))]); verdicts.set(c.career_page_url, v); }
       ({ status, why, evidence: ev, answers, role } = v as any); http = v.http; if (v.err) err = v.err;
     } catch (e: any) { err = String(e.message).slice(0, 200); why = 'error'; }
     tally[status] = (tally[status] ?? 0) + 1;
