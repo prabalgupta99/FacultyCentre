@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
-import { STATIC_QUESTIONS, STATUS_QUESTION, MODEL } from './questions';
+import { STATIC_QUESTIONS, STATUS_QUESTION, BOOL_QUESTIONS, MODEL } from './questions';
 import type { Notice } from './extract';
 import type { Answers } from './decide';
 
@@ -39,15 +39,23 @@ async function call(state: string, questions: object): Promise<any> {
 }
 
 /** Static answers are cached by notice-text hash; status is asked fresh (depends on today) and only when needed. */
+const toChoice = (x: any, yes: string, no: string) => { const p = x?.noul; if (typeof p !== 'number') return { choice: 'unclear', confidence: 0 }; return p >= 0.5 ? { choice: yes, confidence: p } : { choice: no, confidence: 1 - p }; };
+
 export async function judge(n: Notice, today: string, institution = ''): Promise<Answers> {
-  // One call per notice with all four questions (fewer calls: free models are rate limited). Cached by text + today.
-  const key = hash(institution + '|' + n.context + '|' + today);
+  // One call per notice with four yes/no questions. Cached by text + today. Probabilities map to the choice shape decide() reads.
+  const key = hash('v2|' + institution + '|' + n.context + '|' + today);
   let st = cache[key];
   if (st) stats.cacheHits++; else {
-    st = await call(`Today's date: ${today}.\nInstitution: ${institution || 'unknown'}\nNotice: ${n.context}\nDates found in the notice: ${n.dates.join('; ') || 'none'}`, { ...STATIC_QUESTIONS, ...STATUS_QUESTION });
+    st = await call(`Today's date: ${today}.\nInstitution: ${institution || 'unknown'}\nNotice: ${n.context}\nDates found in the notice: ${n.dates.join('; ') || 'none'}`, BOOL_QUESTIONS);
     cache[key] = st;
   }
-  return { is_job_notice: st.is_job_notice, stream: st.stream, role_type: st.role_type, status: st.status } as any;
+  return {
+    is_job_notice: st.is_job_notice,
+    stream: toChoice(st.is_law, 'law', 'other'),
+    role_type: toChoice(st.is_faculty, 'faculty_regular', 'non_teaching'),
+    status: toChoice(st.is_open, 'open', 'closed'),
+    raw: { law: st.is_law?.noul, open: st.is_open?.noul, faculty: st.is_faculty?.noul },
+  } as any;
 }
 
 // ---- offline mock: crude rules shaped like real answers, used only to test plumbing ----
@@ -55,6 +63,7 @@ function mockAnswer(state: string, questions: any) {
   const t = state.toLowerCase(); const out: any = {};
   const job = /(applications? (are )?invited|walk.?in|recruitment|vacanc|post of|wanted)/.test(t) && !/(result|shortlist|merit list|corrigendum|admission)/.test(t);
   if (questions.is_job_notice) out.is_job_notice = { type: 'noul', noul: job ? 0.9 : 0.1 };
+  if (questions.is_law) { const law = /\blaw\b|legal|llb|llm/.test(t); out.is_law = { type: 'noul', noul: law ? 0.9 : 0.1 }; out.is_faculty = { type: 'noul', noul: /professor/.test(t) ? 0.9 : 0.1 }; const today = /Today's date: (\d{4}-\d{2}-\d{2})/.exec(state)?.[1] ?? ''; const ds = (state.match(/\d{4}-\d{2}-\d{2}/g) ?? []).filter(d => d !== today); out.is_open = { type: 'noul', noul: ds.length && ds.every(d => d < today) ? 0.1 : 0.8 }; }
   if (questions.stream) { const law = /\blaw\b|legal|llb|llm/.test(t); out.stream = { type: 'choice', choice: law ? 'law' : /engineer|science|management|commerce|physics|chemistry|english/.test(t) ? 'other' : 'unclear', confidence: 0.8 }; }
   if (questions.role_type) out.role_type = { type: 'choice', choice: /assistant professor|associate professor|professor/.test(t) ? 'faculty_regular' : 'unclear', confidence: 0.7 };
   if (questions.status) {
