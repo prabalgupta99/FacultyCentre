@@ -21,8 +21,8 @@ const hash = (s: string) => crypto.createHash('sha256').update(s).digest('hex').
 async function call(state: string, questions: object): Promise<any> {
   stats.calls++; stats.inputChars += state.length;
   if (MOCK) return mockAnswer(state, questions);
-  for (let attempt = 0; attempt < 8; attempt++) {
-    const gap = Number(process.env.JEV_MIN_GAP_MS || 1200); const wait = lastCall + gap - Date.now(); if (wait > 0) await new Promise(r => setTimeout(r, wait)); lastCall = Date.now();
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const gap = Number(process.env.JEV_MIN_GAP_MS || 2500); const wait = lastCall + gap - Date.now(); if (wait > 0) await new Promise(r => setTimeout(r, wait)); lastCall = Date.now();
     const res = await fetch(ENDPOINT, {
       method: 'POST',
       headers: { Authorization: `Bearer ${process.env.TYPESAFE_API_KEY}`, 'Content-Type': 'application/json' },
