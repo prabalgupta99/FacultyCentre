@@ -13,6 +13,7 @@ let cache: Record<string, any> = {};
 try { cache = JSON.parse(fs.readFileSync(CACHE_FILE, 'utf8')); } catch { /* empty */ }
 export const saveCache = () => fs.writeFileSync(CACHE_FILE, JSON.stringify(cache));
 let activeModel = '';
+let lastCall = 0;
 export const stats = { calls: 0, cacheHits: 0, inputChars: 0 };
 
 const hash = (s: string) => crypto.createHash('sha256').update(s).digest('hex').slice(0, 24);
@@ -20,13 +21,14 @@ const hash = (s: string) => crypto.createHash('sha256').update(s).digest('hex').
 async function call(state: string, questions: object): Promise<any> {
   stats.calls++; stats.inputChars += state.length;
   if (MOCK) return mockAnswer(state, questions);
-  for (let attempt = 0; attempt < 5; attempt++) {
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const gap = Number(process.env.JEV_MIN_GAP_MS || 1200); const wait = lastCall + gap - Date.now(); if (wait > 0) await new Promise(r => setTimeout(r, wait)); lastCall = Date.now();
     const res = await fetch(ENDPOINT, {
       method: 'POST',
       headers: { Authorization: `Bearer ${process.env.TYPESAFE_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ state, model: activeModel || process.env.JEV_MODEL || MODEL, questions }),
     });
-    if (res.status === 429 || res.status === 529) { await new Promise(r => setTimeout(r, 1000 * 2 ** attempt)); continue; }
+    if (res.status === 429 || res.status === 529) { const ra = Number(res.headers.get('retry-after')) || 0; await new Promise(r => setTimeout(r, Math.min(60000, Math.max(ra * 1000, 3000 * 2 ** attempt)))); continue; }
     if (!res.ok) { const body = (await res.text().catch(() => '')).replace(/\s+/g, ' ').slice(0, 200); throw new Error(`Jev ${res.status} ${body}`); }
     return (await res.json()).answers;
   }
