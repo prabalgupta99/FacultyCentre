@@ -22,7 +22,7 @@ async function call(state: string, questions: object): Promise<any> {
   stats.calls++; stats.inputChars += state.length;
   if (MOCK) return mockAnswer(state, questions);
   for (let attempt = 0; attempt < 4; attempt++) {
-    const gap = Number(process.env.JEV_MIN_GAP_MS || 2500); const wait = lastCall + gap - Date.now(); if (wait > 0) await new Promise(r => setTimeout(r, wait)); lastCall = Date.now();
+    const gap = Number(process.env.JEV_MIN_GAP_MS || 800); const wait = lastCall + gap - Date.now(); if (wait > 0) await new Promise(r => setTimeout(r, wait)); lastCall = Date.now();
     const t0 = Date.now();
     const res = await fetch(ENDPOINT, {
       method: 'POST',
