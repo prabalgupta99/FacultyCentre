@@ -21,3 +21,11 @@ test('date regex handles 21-Jul-2026 and 5th August 2026', () => {
 test('date beside a notice (parent block) is attached', () => {
   const html = '<ul><li><a href="/x">Applications are invited for Assistant Professor in Law at the University</a><span>Last date: 5th August 2026</span></li></ul>';
   const ns = extractNotices(html, 'https://e.com/'); assert.ok(ns.some(x => x.dates.length > 0)); });
+
+// Regression tests from the mistake log (run 29, 3 Oct 2026)
+const nt = { title: 'APPLICATIONS ARE INVITED FOR VARIOUS NON-TEACHING POSITIONS', context: 'APPLICATIONS ARE INVITED FOR VARIOUS NON-TEACHING POSITIONS', link: null, dates: [] };
+const nonTeach = { ...a(0.9, 'law', 'open'), role_type: { choice: 'non_teaching', confidence: 0.55 } };
+test('REGRESSION Vignan: non-teaching notice must not be hiring', () => assert.notEqual(decide([{ n: nt, a: nonTeach }], true).status, 'hiring'));
+test('REGRESSION Chotanagpur: application-form dropdown is not a notice', async () => {
+  const { prefilter } = await import('../scripts/lib/extract');
+  assert.equal(prefilter({ title: 'Position Applied For: * --Select-- Assistant Professor (Law) Assistant Professor (Management)', context: 'Position Applied For: * --Select-- Assistant Professor (Law) Assistant Professor (Management) Apply now vacancy', link: null, dates: [] }), false); });
