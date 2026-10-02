@@ -12,6 +12,7 @@ const CACHE_FILE = process.env.JEV_CACHE_FILE || '.jev-cache.json';
 let cache: Record<string, any> = {};
 try { cache = JSON.parse(fs.readFileSync(CACHE_FILE, 'utf8')); } catch { /* empty */ }
 export const saveCache = () => fs.writeFileSync(CACHE_FILE, JSON.stringify(cache));
+let activeModel = '';
 export const stats = { calls: 0, cacheHits: 0, inputChars: 0 };
 
 const hash = (s: string) => crypto.createHash('sha256').update(s).digest('hex').slice(0, 24);
@@ -23,7 +24,7 @@ async function call(state: string, questions: object): Promise<any> {
     const res = await fetch(ENDPOINT, {
       method: 'POST',
       headers: { Authorization: `Bearer ${process.env.TYPESAFE_API_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ state, model: process.env.JEV_MODEL || MODEL, questions }),
+      body: JSON.stringify({ state, model: activeModel || process.env.JEV_MODEL || MODEL, questions }),
     });
     if (res.status === 429 || res.status === 529) { await new Promise(r => setTimeout(r, 1000 * 2 ** attempt)); continue; }
     if (!res.ok) { const body = (await res.text().catch(() => '')).replace(/\s+/g, ' ').slice(0, 200); throw new Error(`Jev ${res.status} ${body}`); }
@@ -61,13 +62,19 @@ function mockAnswer(state: string, questions: any) {
   return out;
 }
 
-/** One tiny call before a run. Prints endpoint, model, whether a key is present (length only, never the value) and the answer or the error body. */
+/** Before a run: try each candidate model with one tiny call, keep the first that answers. Prints endpoint, model, key length (never the key) and the answer or error body. */
 export async function preflight(): Promise<boolean> {
   const key = process.env.TYPESAFE_API_KEY || '';
-  console.log(`PREFLIGHT endpoint=${ENDPOINT} model=${process.env.JEV_MODEL || MODEL} keyLength=${key.length} mock=${MOCK}`);
+  console.log(`PREFLIGHT endpoint=${ENDPOINT} keyLength=${key.length} mock=${MOCK}`);
   if (MOCK) return true;
-  try {
-    const a = await call('Notice: Applications are invited for the post of Assistant Professor (Law). Last date 30 Nov 2099.', { is_job_notice: STATIC_QUESTIONS.is_job_notice });
-    console.log('PREFLIGHT ok ' + JSON.stringify(a).slice(0, 200)); return true;
-  } catch (e: any) { console.log('PREFLIGHT FAILED ' + String(e.message).slice(0, 300)); return false; }
+  const cands = (process.env.JEV_MODELS || process.env.JEV_MODEL || MODEL).split(',').map(x => x.trim()).filter(Boolean);
+  for (const m of cands) {
+    activeModel = m;
+    try {
+      const a = await call('Notice: Applications are invited for the post of Assistant Professor (Law). Last date 30 Nov 2099.', { is_job_notice: STATIC_QUESTIONS.is_job_notice });
+      if (!a?.is_job_notice || typeof a.is_job_notice.noul !== 'number') { console.log(`PREFLIGHT model=${m} unexpected answer shape ${JSON.stringify(a).slice(0, 160)}`); continue; }
+      console.log(`PREFLIGHT ok model=${m} ${JSON.stringify(a).slice(0, 160)}`); return true;
+    } catch (e: any) { console.log(`PREFLIGHT model=${m} FAILED ${String(e.message).slice(0, 260)}`); }
+  }
+  activeModel = ''; return false;
 }
