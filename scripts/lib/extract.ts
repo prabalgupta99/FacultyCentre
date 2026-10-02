@@ -15,7 +15,7 @@ export function extractNotices(html: string, pageUrl: string): Notice[] {
   $('script,style,noscript,nav,footer,header').remove();
   const seen = new Set<string>();
   const out: Notice[] = [];
-  $('tr, li, article, .views-row, a').each((_, el) => {
+  $('tr, li, article, .views-row, a, p, h1, h2, h3, h4, h5, h6, td, div:not(:has(div,p,li,table,ul,ol,tr,h1,h2,h3,h4,h5,h6))').each((_, el) => {
     const text = $(el).text().replace(/\s+/g, ' ').trim();
     if (text.length < 25 || text.length > 700) return;
     const key = text.slice(0, 120).toLowerCase();
