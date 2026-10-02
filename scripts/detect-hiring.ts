@@ -6,6 +6,8 @@
 import { chromium } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { extractNotices, prefilter, pageReadable, type Notice } from './lib/extract';
+import { preflight } from './lib/jev';
+import { analyzeUrl } from './lib/analyze';
 import { decide, type Judged, type Status } from './lib/decide';
 import { judge, saveCache, stats } from './lib/jev';
 
@@ -18,31 +20,19 @@ const MAX_NOTICES = 40;
 const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!);
 
 async function main() {
-  let q = supabase.from('colleges').select('id, college_name_place, career_page_url').not('career_page_url', 'is', null);
+  let q = supabase.from('colleges').select('id, college_name_place, career_page_url').not('career_page_url', 'is', null).neq('career_page_url', '');
   if (IDS) q = q.in('id', IDS);
   const { data: colleges, error } = await q;
   if (error) throw error;
+  if (!(await preflight())) { console.error('Jev preflight failed, stopping before any page work.'); process.exit(2); }
   const browser = await chromium.launch();
-  const tally: Record<string, number> = {}; let done = 0; const pageCache = new Map<string, { http: number | null; html: string }>();
+  const tally: Record<string, number> = {}; let done = 0; const pageCache = new Map<string, { http: number | null; html: string }>(); const verdicts = new Map<string, any>();
   for (const c of (colleges ?? []).slice(0, LIMIT)) {
     let status: Status = 'unknown', why = '', ev: Notice | undefined, answers: any, role: string | undefined, http: number | null = null, err: string | null = null;
     try {
-      const page = await browser.newPage();
-      const cached = pageCache.get(c.career_page_url);
-      let html: string;
-      if (cached) { http = cached.http; html = cached.html; } else {
-        const resp = await page.goto(c.career_page_url, { waitUntil: 'domcontentloaded', timeout: 40000 });
-        http = resp?.status() ?? null;
-        await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
-        html = await page.content(); pageCache.set(c.career_page_url, { http, html });
-      }
-      await page.close();
-      const readable = pageReadable(http, html);
-      const notices = readable ? extractNotices(html, c.career_page_url).filter(prefilter).slice(0, MAX_NOTICES) : [];
-      const judged: Judged[] = [];
-      for (const n of notices) judged.push({ n, a: await judge(n, TODAY, c.college_name_place) });
-      const d: any = decide(judged, readable);
-      ({ status, why, evidence: ev, answers, role } = d);
+      let v = verdicts.get(c.career_page_url);
+      if (!v) { v = await analyzeUrl(browser, c.career_page_url, c.college_name_place, TODAY); verdicts.set(c.career_page_url, v); }
+      ({ status, why, evidence: ev, answers, role } = v as any); http = v.http; if (v.err) err = v.err;
     } catch (e: any) { err = String(e.message).slice(0, 200); why = 'error'; }
     tally[status] = (tally[status] ?? 0) + 1;
     // RULE: unknown never overwrites a known status; it only records the reason and the check time.
