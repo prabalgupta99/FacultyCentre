@@ -38,3 +38,14 @@ test('REGRESSION medical and MBA adverts at a law-named page are not law leads',
   const ans: any = { ...a(0.85, 'law', 'open', 0.52), raw: { law: 0.52, open: 0.65, faculty: 0.7 } };
   const r: any = decide([{ n: m, a: ans }], true, 'Law College, Somewhere');
   assert.notEqual(r.status, 'hiring'); assert.ok(!r.lead); });
+test('REGRESSION cancellation notice is dropped before judging', async () => {
+  const { prefilter } = await import('../scripts/lib/extract');
+  assert.equal(prefilter({ title: 'Cancellation of Re-Advertisement No. 03/Law/2026-27 and LSC for the post of Guest Teacher', context: 'Cancellation of Re-Advertisement No. 03/Law/2026-27 for the post of Guest Teacher', link: null, dates: [] }), false); });
+test('REGRESSION select-field text is a form, not a notice', async () => {
+  const { prefilter } = await import('../scripts/lib/extract');
+  assert.equal(prefilter({ title: 'Select Professor Associate Professor Assistant Professor Research Assistant This field is required.', context: 'Select Professor Associate Professor Assistant Professor Research Assistant This field is required. vacancy apply', link: null, dates: [] }), false); });
+test('hiring needs law named in the notice itself; institution-only law is a review lead, not a tag', () => {
+  const m = { title: 't', context: 'Application for the post of Faculty Professor', link: null, dates: [] };
+  const ans: any = { ...a(0.85, 'law', 'open', 0.8), raw: { law: 0.8, open: 0.8, faculty: 0.8 } };
+  const r: any = decide([{ n: m, a: ans }], true, 'National Law University');
+  assert.notEqual(r.status, 'hiring'); });
