@@ -6,8 +6,9 @@ export const DATE_RE = /\b(\d{1,2}[-\/.]\d{1,2}[-\/.]\d{2,4}|\d{1,2}(?:st|nd|rd|
 
 const JOBISH = /(recruit|vacanc|post of|posts of|walk.?in|applications? (are )?invited|call for applications|advertisement|assistant professor|associate professor|professor|guest faculty|lecturer|teaching associate|fellow|project (staff|assistant)|engagement of|appointment)/i;
 const NOT_JOB = /(admission|tender|quotation|convocation|scholarship|seminar|workshop|conference|newsletter|annual report)/i;
-const FORM_FIELD = /--\s*select\s*--|position applied for|choose (a )?position/i; // application-form dropdowns are not notices (mistake log: Chotanagpur false hiring)
-export const prefilter = (n: Notice) => JOBISH.test(n.context) && !NOT_JOB.test(n.title) && !FORM_FIELD.test(n.title + ' ' + n.context.slice(0, 120));
+const FORM_FIELD = /--\s*select\s*--|position applied for|choose (a )?position|this field is required|^\s*select\b/i; // application-form dropdowns are not notices (mistake log: Chotanagpur false hiring)
+const CANCELLED = /\bcancel|postpone|re-?schedul|corrigendum|\bresult\b|merit list|shortlist|revised date|extension of/i;
+export const prefilter = (n: Notice) => JOBISH.test(n.context) && !NOT_JOB.test(n.title) && !CANCELLED.test(n.title + ' ' + n.context.slice(0, 160)) && !FORM_FIELD.test(n.title + ' ' + n.context.slice(0, 120));
 
 /** Notices = table rows, list items, article blocks and links with enough text.
  *  If a notice has no date inside it, look at its parent block (<= 600 chars) so a date shown beside it is not lost. */
