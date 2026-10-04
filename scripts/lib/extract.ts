@@ -1,6 +1,6 @@
 import * as cheerio from 'cheerio';
 
-export type Notice = { title: string; context: string; link: string | null; dates: string[]; fromWindow?: boolean };
+export type Notice = { title: string; context: string; link: string | null; dates: string[]; fromWindow?: boolean; detail?: boolean };
 
 export const DATE_RE = /\b(\d{1,2}[-\/.]\d{1,2}[-\/.]\d{2,4}|\d{1,2}(?:st|nd|rd|th)?[\s-]+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[\s,-]+\d{2,4}|(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{1,2}(?:st|nd|rd|th)?,?\s+\d{4}|\d{4}-\d{2}-\d{2})\b/gi;
 
