@@ -10,7 +10,7 @@ const LAWISH = /\blaw\b|legal|\bllb\b|\bllm\b/i;
 
 
 const MAX_NOTICES = Number(process.env.MAX_NOTICES || 5);
-const LINK_HINT = /(notices?|announcements?|latest|what.?s new|recruitment|career|vacanc|opening|jobs?\b|walk.?in|advertis|notification|join.?us|faculty|teaching|employment|apply)/i;
+const LINK_HINT = /(notices?|announcements?|latest|what.?s new|recruitment|career|vacanc|opening|jobs?\b|walk.?in|advertis|notification|join.?us|work.?with.?us|opportunit|positions?\b|faculty|teaching|employment|apply)/i;
 const NOT_PAGE = /(non[-_ ]?teaching|\/people|\/faculty\/|\/staff|\/team|login|signin|register)/i;
 const SKIP_LINK = /\.(jpg|jpeg|png|gif|zip|docx?|xlsx?)(\?|$)|^(mailto|tel|javascript):/i;
 
