@@ -78,3 +78,7 @@ test('REGRESSION Allahabad ticker: later words like "result" in the same blob do
   const { undatedGuard } = await import('../scripts/lib/jev');
   const ctx = 'Recruitment for the Engagement of Contractual Faculty for B.A.LL.B.(Hons) Five year Integrated Course (Self Finance) | Press Release: Correction Window (Ph.D. Admissions-2026) | Press release of PGAT 26 result (PGAT 2 and IPS)';
   assert.equal(undatedGuard({ choice: 'closed', confidence: 0.89 }, { context: ctx, dates: [] }).choice, 'unclear'); });
+
+test('REGRESSION Allahabad blob: dates borrowed from neighbours do not make an undated line closed', async () => {
+  const { undatedGuard } = await import('../scripts/lib/jev');
+  assert.equal(undatedGuard({ choice: 'closed', confidence: 0.89 }, { context: 'Recruitment for the Engagement of Contractual Faculty for B.A.LL.B.(Hons) | Press Release PGAT 2025-26', dates: ['2025-26', '12.05.2025'] }).choice, 'unclear'); });
