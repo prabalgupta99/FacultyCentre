@@ -16,4 +16,4 @@ https://www.shridharuniversity.ac.in/ | Shridhar University, Pilani
 https://sju.ac.in/ | Name
 https://rru.ac.in/ | Rashtriya Raksha University
 http://www.iilsindia.com | IILS Siliguri
-# rerun 6 detail read
+# rerun 7 own-date guard + detail read
