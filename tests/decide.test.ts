@@ -82,3 +82,13 @@ test('REGRESSION Allahabad ticker: later words like "result" in the same blob do
 test('REGRESSION Allahabad blob: dates borrowed from neighbours do not make an undated line closed', async () => {
   const { undatedGuard } = await import('../scripts/lib/jev');
   assert.equal(undatedGuard({ choice: 'closed', confidence: 0.89 }, { context: 'Recruitment for the Engagement of Contractual Faculty for B.A.LL.B.(Hons) | Press Release PGAT 2025-26', dates: ['2025-26', '12.05.2025'] }).choice, 'unclear'); });
+
+test('REGRESSION NUALS: a stated last date in the past is closed', async () => {
+  const { lastDatePassed } = await import('../scripts/lib/jev');
+  assert.equal(lastDatePassed('August112026RecruitmentNewAppointment to the Post of Assistant Professor in Law - Last date extended up to 03.09.2026PDF', '2026-10-04'), true);
+  assert.equal(lastDatePassed('Apply. Last date 20.10.2026', '2026-10-04'), false);
+  assert.equal(lastDatePassed('Post of Professor of Law', '2026-10-04'), false); });
+test('REGRESSION KLE: faculty profile line without application wording is not a lead', () => {
+  const nn = { title: 'Assistant Professor of Law', context: 'Assistant Professor of Law', link: null, dates: [] as string[] };
+  const ans: any = { is_job_notice: { noul: 0.8 }, stream: { choice: 'law', confidence: 0.9 }, role_type: { choice: 'faculty_regular', confidence: 0.9 }, status: { choice: 'unclear', confidence: 0 }, raw: { law: 0.9, open: 0.6, faculty: 0.9 } };
+  const r: any = decide([{ n: nn, a: ans }], true, 'KLE Law'); assert.ok(!r.lead); });
