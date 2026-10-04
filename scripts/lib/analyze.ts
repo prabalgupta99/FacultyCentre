@@ -5,7 +5,7 @@ import { decide, type Judged, type Status } from './decide';
 import { judge } from './jev';
 import { pdfNotices } from './pdf';
 import { readDetail } from './detail';
-import { freshness, downgradeIfStale } from './fresh';
+import { freshness, downgradeIfStale, parseDate } from './fresh';
 const LAWISH = /\blaw\b|legal|\bllb\b|\bllm\b/i;
 
 
@@ -75,6 +75,10 @@ export async function analyzeUrl(browser: Browser, url: string, name: string, to
         if (j.n.fromWindow || j.n.detail || !j.n.link || (j.n.context.slice(0, 200).match(DATE_RE) || []).length || !r || !(j.a.is_job_notice.noul >= 0.6) || !(r.law >= 0.5) || !(r.faculty >= 0.5)) continue;
         detailReads++; const dn = await readDetail(j.n); if (!dn) continue; (dn as any).detail = true;
         const a1 = await judge(dn, today, name); v.jevCalls++; console.log('DETAIL ' + j.n.link + ' ' + JSON.stringify({ dates: dn.dates.slice(0, 4), job: (a1 as any).is_job_notice?.noul, raw: (a1 as any).raw }));
+        // Opened notice with a date in the last 30 days, no passed last date, and the model leaning open (>= 0.5): treat as open (post date is the evidence; the deadline may be unstated).
+        const ds = dn.dates.map(parseDate).filter((x): x is Date => !!x && x.getFullYear() >= 2020).map(x => x.getTime());
+        const recent = ds.length > 0 && Math.max(...ds) >= new Date(today).getTime() - 30 * 864e5;
+        if (recent && (a1 as any).raw?.open >= 0.5 && (a1 as any).status?.choice !== 'closed') (a1 as any).status = { choice: 'open', confidence: 0.6 };
         if (freshness(dn.dates, today) === 'fresh') judgedAll[k] = { n: dn, a: a1 }; else { judgedAll.splice(k, 1); k--; staleSeen = true; }
       }
       if (hop < 3) for (const w of lawWindows(html, name).filter(w => keepFresh(w))) { const a0 = await judge(w, today, name); judgedAll.push({ n: w, a: a0 }); v.jevCalls++; console.log('WINDOW ' + current + ' ' + JSON.stringify({ t: w.context.slice(0, 160), job: (a0 as any).is_job_notice?.noul, raw: (a0 as any).raw })); }
