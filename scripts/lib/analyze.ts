@@ -4,6 +4,7 @@ import { extractNotices, prefilter, pageReadable, lawWindows, type Notice } from
 import { decide, type Judged, type Status } from './decide';
 import { judge } from './jev';
 import { pdfNotices } from './pdf';
+import { readDetail } from './detail';
 import { freshness, downgradeIfStale } from './fresh';
 const LAWISH = /\blaw\b|legal|\bllb\b|\bllm\b/i;
 
@@ -44,7 +45,7 @@ export async function analyzeUrl(browser: Browser, url: string, name: string, to
   let staleSeen = false;
   const keepFresh = (n: Notice) => { if (freshness(n.dates, today) === 'fresh') return true; if (LAWISH.test(n.context)) staleSeen = true; return false; };
   const seen = new Set<string>([url]);
-  const queue: string[] = []; let first = true; let judgedAll: Judged[] = []; let anyReadable = false;
+  const queue: string[] = []; let first = true; let judgedAll: Judged[] = []; let anyReadable = false; let detailReads = 0;
   let current = url;
   for (let hop = 0; hop < 8; hop++) {
     let http: number | null = null, html = '';
@@ -67,6 +68,14 @@ export async function analyzeUrl(browser: Browser, url: string, name: string, to
       const notices = extractNotices(html, current).filter(prefilter).filter(n => keepFresh(n)).slice(0, MAX_NOTICES);
       v.notices += notices.length;
       for (const n of notices) { const a0 = await judge(n, today, name); judgedAll.push({ n, a: a0 }); v.jevCalls++; { const x: any = a0; console.log('NOTICE ' + JSON.stringify({ t: n.title.slice(0, 70), job: x.is_job_notice?.noul, st: x.stream?.choice + ':' + x.stream?.confidence, ro: x.role_type?.choice, su: x.status?.choice + ':' + x.status?.confidence, raw: x.raw })); } if ((decide(judgedAll, true, name) as any).status === 'hiring') break; }
+      // Detail read: an undated, law-looking faculty notice with a link is opened so its real dates and wording are judged (max 3 per site).
+      for (let k = 0; k < judgedAll.length && detailReads < 3; k++) {
+        const j: any = judgedAll[k]; const r = j.a?.raw;
+        if (j.n.fromWindow || j.n.detail || !j.n.link || j.n.dates.length || !r || !(j.a.is_job_notice.noul >= 0.6) || !(r.law >= 0.5) || !(r.faculty >= 0.5)) continue;
+        detailReads++; const dn = await readDetail(j.n); if (!dn) continue; (dn as any).detail = true;
+        const a1 = await judge(dn, today, name); v.jevCalls++; console.log('DETAIL ' + j.n.link + ' ' + JSON.stringify({ dates: dn.dates.slice(0, 4), job: (a1 as any).is_job_notice?.noul, raw: (a1 as any).raw }));
+        if (freshness(dn.dates, today) === 'fresh') judgedAll[k] = { n: dn, a: a1 }; else { judgedAll.splice(k, 1); k--; staleSeen = true; }
+      }
       if (hop < 3) for (const w of lawWindows(html, name).filter(w => keepFresh(w))) { const a0 = await judge(w, today, name); judgedAll.push({ n: w, a: a0 }); v.jevCalls++; console.log('WINDOW ' + current + ' ' + JSON.stringify({ t: w.context.slice(0, 160), job: (a0 as any).is_job_notice?.noul, raw: (a0 as any).raw })); }
       const d: any = decide(judgedAll, true, name);
       if (d.status === 'hiring') { Object.assign(v, { status: 'hiring', why: d.why, evidence: d.evidence, answers: d.answers, role: d.role }); return v; }
