@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import { STATIC_QUESTIONS, STATUS_QUESTION, BOOL_QUESTIONS, MODEL } from './questions';
 import type { Notice } from './extract';
+import { DATE_RE } from './extract';
 import type { Answers } from './decide';
 
 // Modes: real (TYPESAFE_API_KEY set), mock (JEV_MOCK=1: offline plumbing test only, NOT an accuracy measure)
@@ -43,7 +44,9 @@ const toChoice = (x: any, yes: string, no: string) => { const p = x?.noul; if (t
 
 // The model said 'closed' for undated ticker lines (Allahabad, rerun 3). Without a date or an explicit closed word, closed cannot be claimed: unclear.
 export function undatedGuard(st: { choice: string; confidence: number }, n: { context: string; dates: string[] }) {
-  if (st.choice === 'closed' && n.dates.length === 0 && !/closed|has ended|expired|result|shortlist|cancel/i.test(n.context.slice(0, 150))) return { choice: 'unclear', confidence: 0 };
+  // Dates in the notice's own opening text only: a ticker blob pulls in dates and words from its neighbours.
+  const own = n.context.slice(0, 200);
+  if (st.choice === 'closed' && !(own.match(DATE_RE) || []).length && !/closed|has ended|expired|result|shortlist|cancel/i.test(own.slice(0, 150))) return { choice: 'unclear', confidence: 0 };
   return st;
 }
 export async function judge(n: Notice, today: string, institution = ''): Promise<Answers> {
