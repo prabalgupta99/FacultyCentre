@@ -1,6 +1,6 @@
 import * as cheerio from 'cheerio';
 
-export type Notice = { title: string; context: string; link: string | null; dates: string[] };
+export type Notice = { title: string; context: string; link: string | null; dates: string[]; fromWindow?: boolean };
 
 export const DATE_RE = /\b(\d{1,2}[-\/.]\d{1,2}[-\/.]\d{2,4}|\d{1,2}(?:st|nd|rd|th)?[\s-]+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[\s,-]+\d{2,4}|(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{1,2}(?:st|nd|rd|th)?,?\s+\d{4}|\d{4}-\d{2}-\d{2})\b/gi;
 
@@ -38,3 +38,21 @@ export function extractNotices(html: string, pageUrl: string): Notice[] {
 
 /** A page counts as read only if it returned a normal status and enough text. */
 export const pageReadable = (http: number | null, html: string) => !!http && http < 400 && html.replace(/<[^>]+>/g, '').length > 800;
+
+// Law windows: text around a law unit/domain mention on a page that also shows a faculty-hiring cue. Judged by the model like a notice,
+// but flagged fromWindow so it can only raise a review lead, never a hiring tag.
+const W_FAC = /faculty\s+(hiring|recruitment|positions?|vacanc\w+|openings?)|(hiring|recruiting|vacanc\w+|openings?|positions?)\s+(for|of|in)\s+(the\s+)?(faculty|professor|assistant professor)|\bapply\b[^.]{0,120}(faculty|professor|lecturer)|(faculty|professor|lecturer|teaching)[^.]{0,200}(applications?\s+(are\s+)?invit|vacanc|recruit|hiring|openings?)/i;
+const W_LAW = /(school|department|faculty|college|centre|center) of (law|legal studies)|law (school|domains?|department|faculty)|core law|\blaw\s*:|\b(llb|llm)\b|\blaw\b[^.]{0,40}(specialisation|specialization|discipline)|(specialisation|specialization|discipline)s?[^.]{0,80}\blaw\b/gi;
+export function lawWindows(html: string, institution = '', max = 2): Notice[] {
+  const $ = cheerio.load(html); $('script,style,noscript,select,option').remove();
+  let text = $('body').text().replace(/\s+/g, ' ').trim();
+  for (const w of institution.split(/[,|-]/).map(x => x.trim()).filter(x => x.length > 5)) text = text.split(w).join(' ');
+  if (text.length < 300 || !W_FAC.test(text)) return [];
+  const out: Notice[] = []; let last = -1e9; let m: RegExpExecArray | null; W_LAW.lastIndex = 0;
+  while ((m = W_LAW.exec(text)) && out.length < max) {
+    if (m.index - last < 600) continue; last = m.index;
+    const ctx = text.slice(Math.max(0, m.index - 250), m.index + 350);
+    out.push({ title: ctx.slice(0, 120), context: ctx, link: null, dates: (ctx.match(DATE_RE) || []).slice(0, 3), fromWindow: true });
+  }
+  return out;
+}
