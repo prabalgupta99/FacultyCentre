@@ -64,3 +64,12 @@ test('lawWindows finds a law domain list on a faculty hiring page', async () => 
   const html = '<body><p>' + 'x '.repeat(200) + 'Faculty Hiring: Apply now for Assistant Professor. School of Law: Core Law Domains Jurisprudence, Criminal Law.</p></body>';
   assert.ok(lawWindows(html, 'Other University').length >= 1);
   assert.equal(lawWindows('<body><p>' + 'x '.repeat(200) + 'School of Law admission open for LLB students.</p></body>', '').length, 0); });
+
+test('REGRESSION Allahabad: undated ticker line judged closed by the model is not closed', async () => {
+  const { undatedGuard } = await import('../scripts/lib/jev');
+  assert.equal(undatedGuard({ choice: 'closed', confidence: 0.89 }, { context: 'Recruitment for the Engagement of Contractual Faculty for B.A.LL.B.(Hons)', dates: [] }).choice, 'unclear');
+  assert.equal(undatedGuard({ choice: 'closed', confidence: 0.89 }, { context: 'Recruitment for Faculty. Last date 5 Sep 2026', dates: ['5 Sep 2026'] }).choice, 'closed'); });
+test('undated law faculty notice with open-leaning model gets a review lead, not not_hiring', () => {
+  const nn = { title: 't', context: 'Recruitment for the Engagement of Contractual Faculty for B.A.LL.B.(Hons)', link: null, dates: [] as string[] };
+  const ans: any = { is_job_notice: { noul: 0.97 }, stream: { choice: 'law', confidence: 0.98 }, role_type: { choice: 'faculty_regular', confidence: 0.98 }, status: { choice: 'unclear', confidence: 0 }, raw: { law: 0.98, open: 0.11, faculty: 0.98 } };
+  const r: any = decide([{ n: nn, a: ans }], true, 'University of Allahabad'); assert.equal(r.status, 'unknown'); assert.ok(r.lead); });
