@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import { STATIC_QUESTIONS, STATUS_QUESTION, BOOL_QUESTIONS, MODEL } from './questions';
 import type { Notice } from './extract';
 import { DATE_RE } from './extract';
+import { parseDate } from './fresh';
 import type { Answers } from './decide';
 
 // Modes: real (TYPESAFE_API_KEY set), mock (JEV_MOCK=1: offline plumbing test only, NOT an accuracy measure)
@@ -49,6 +50,13 @@ export function undatedGuard(st: { choice: string; confidence: number }, n: { co
   if (st.choice === 'closed' && !(own.match(DATE_RE) || []).length && !/closed|has ended|expired|result|shortlist|cancel/i.test(own.slice(0, 150))) return { choice: 'unclear', confidence: 0 };
   return st;
 }
+// A stated last date that has already passed means closed, whatever the model says (NUALS "Last date extended up to 03.09.2026", seen 4 Oct).
+export function lastDatePassed(context: string, today: string): boolean {
+  const t = new Date(today).getTime(); const ds: number[] = [];
+  const re = /(?:last\s*date|up\s*to|upto|till|on or before|before|deadline)[^0-9A-Za-z]{0,25}((?:\d{1,2}[-\/.]\d{1,2}[-\/.]\d{2,4})|(?:\d{1,2}(?:st|nd|rd|th)?[\s-]+[A-Za-z]{3,9}[\s,-]+\d{4}))/gi; let m: RegExpExecArray | null;
+  while ((m = re.exec(context))) { const d = parseDate(m[1]); if (d && d.getFullYear() >= 2020) ds.push(d.getTime()); }
+  return ds.length > 0 && ds.every(x => x < t);
+}
 export async function judge(n: Notice, today: string, institution = ''): Promise<Answers> {
   // One call per notice with four yes/no questions. Cached by text + today. Probabilities map to the choice shape decide() reads.
   const key = hash('v2|' + institution + '|' + n.context + '|' + today);
@@ -61,7 +69,7 @@ export async function judge(n: Notice, today: string, institution = ''): Promise
     is_job_notice: st.is_job_notice,
     stream: toChoice(st.is_law, 'law', 'other'),
     role_type: toChoice(st.is_faculty, 'faculty_regular', 'non_teaching'),
-    status: undatedGuard(toChoice(st.is_open, 'open', 'closed'), n),
+    status: lastDatePassed(n.context, today) ? { choice: 'closed', confidence: 1 } : undatedGuard(toChoice(st.is_open, 'open', 'closed'), n),
     raw: { law: st.is_law?.noul, open: st.is_open?.noul, faculty: st.is_faculty?.noul },
   } as any;
 }
