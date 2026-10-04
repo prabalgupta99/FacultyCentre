@@ -43,7 +43,7 @@ const toChoice = (x: any, yes: string, no: string) => { const p = x?.noul; if (t
 
 // The model said 'closed' for undated ticker lines (Allahabad, rerun 3). Without a date or an explicit closed word, closed cannot be claimed: unclear.
 export function undatedGuard(st: { choice: string; confidence: number }, n: { context: string; dates: string[] }) {
-  if (st.choice === 'closed' && n.dates.length === 0 && !/closed|has ended|expired|result|shortlist|cancel/i.test(n.context)) return { choice: 'unclear', confidence: 0 };
+  if (st.choice === 'closed' && n.dates.length === 0 && !/closed|has ended|expired|result|shortlist|cancel/i.test(n.context.slice(0, 150))) return { choice: 'unclear', confidence: 0 };
   return st;
 }
 export async function judge(n: Notice, today: string, institution = ''): Promise<Answers> {
