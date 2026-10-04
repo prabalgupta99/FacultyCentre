@@ -28,7 +28,7 @@ export function decide(judged: Judged[], pageRead: boolean, institution = '') {
   const lawish = (j: Judged) => ['law', 'mixed'].includes(pick(j.a.stream));
   const FACULTY_WORD = /professor|faculty|lecturer|teacher|teaching|instructor/i;
   const isFaculty = (j: Judged) => pick(j.a.role_type).startsWith('faculty') && FACULTY_WORD.test(j.n.context) && !/non[- ]?teaching/i.test(j.n.context.slice(0, 160));
-  const openLaw = jobs.filter(j => lawish(j) && LAW_WORD.test(j.n.context) && !OTHER_DEPT.test(j.n.context.slice(0, 200)) && pick(j.a.status) === 'open' && isFaculty(j) && hasApplyCue(j.n.context));
+  const openLaw = jobs.filter(j => !j.n.fromWindow && lawish(j) && LAW_WORD.test(j.n.context) && !OTHER_DEPT.test(j.n.context.slice(0, 200)) && pick(j.a.status) === 'open' && isFaculty(j) && hasApplyCue(j.n.context));
   if (openLaw.length) {
     const best = openLaw[0];
     return { status: 'hiring' as Status, why: 'open law notice', evidence: best.n, answers: best.a, openStreams: ['law'], role: pick(best.a.role_type) };
