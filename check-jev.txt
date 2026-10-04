@@ -1,15 +1,60 @@
-# Label set v2: 8 hiring, 6 closed (see labels.csv). Dry run, no writes.
-https://www.nls.ac.in/ | NLSIU Bengaluru
+# Faculty Plus law posts, college site or career page, dry check
+http://www.allduniv.ac.in/ | University of Allahabad, Prayagraj
+https://aud.ac.in/ | Dr. B.R. Ambedkar University, Delhi - Guest Facult
+https://espro.christuniversity.in/Careers/ | Name
+http://www.vims.ac.in | Vydehi Group of Institutions, Bengaluru - Professo
+https://www.shridharuniversity.ac.in/ | Shridhar University, Pilani
+https://www.nls.ac.in/ | National Law School of India University, Bengaluru
+https://vidyashilp.edu.in/faculty-careers/ | Name
 https://www.amu.ac.in/ | Aligarh Muslim University
-https://aud.ac.in/ | Dr BR Ambedkar Univ Delhi
-http://www.allduniv.ac.in/ | University of Allahabad
-http://www.ignou.ac.in/ | IGNOU
-https://vidyashilp.edu.in/ | Vidyashilp University
-https://www.bbau.ac.in/ | BBAU Lucknow
-https://www.christuniversity.in/ | CHRIST Univ
-https://careers.nludelhi.ac.in | NLU Delhi
-http://www.nuals.ac.in/ | NUALS Kochi
-https://rru.ac.in/ | Rashtriya Raksha Univ
-http://kvrrlawcollege.com/ | KV Ranga Reddy Law College
-https://www.klelawcollege.edu.in/ | KLE Law Navi Mumbai
-http://www.iilsindia.com | IILS Siliguri
+https://fa-elxu-saasfaprod1.fa.ocs.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/jobs/preview/15114/?lastSelectedFacet=POSTING_DATES&selectedPostingDatesFacet=30 | SVKM’s NMIMS Deemed to be University
+http://www.ignou.ac.in/ | Indira Gandhi National Open University, Delhi
+https://kslu.karnataka.gov.in/ | Karnataka State Law University, Hubballi
+https://careers.nludelhi.ac.in | National Law University Delhi
+https://www.bbau.ac.in/CareerTeaching25.aspx | Babasaheb Bhimrao Ambedkar University, Lucknow
+http://cup.edu.in/ | Central University of Punjab
+http://www.hpuniv.nic.in/ | Himachal Pradesh University
+https://fa-elxu-saasfaprod1.fa.ocs.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/job/14340/?utm_medium=jobshare&utm_source=External+Job+Share | SVKM’s NMIMS Deemed to be University
+http://kvrrlawcollege.com/ | K V Ranga Reddy Law College, Hyderabad
+https://klecollegeoflawmumbai.edu.in/ | Name
+https://www.nuals.ac.in/ | The National University of Advanced Legal Studies, Kochi
+https://nimsuniversity.org/ | NIMS University
+https://bvp.bharatividyapeeth.edu/index.php/careers | Bharati Vidyapeeth
+http://www.abbslaw.edu.in | ABBS SCHOOL OF LAW
+https://www.pondiuni.edu.in/wp-content/plugins/pdf-poster/pdfjs/web/viewer.html?file=https://www.pondiuni.edu.in/wp-content/uploads/2026/08/walkininterviewforfieldinvestigation-CentreforSocialInclusionPolicy12082026.pdf&download=true&print=false&openfile=false | Field Investigator Recruitment at Pondicherry Univ
+https://galgotiasuniversity.edu.in/p/career | Name
+https://cuprec.samarth.edu.in | Name
+https://recruit.cusat.ac.in | Name
+https://www.mewarlawinstitute.com/career | Name
+https://www.kccitm.edu.in/careers-at-kcc | Name
+https://www.gsfcuniversity.ac.in/career | Name
+https://gitarattan.edu.in/career/ | Name
+http://www.tiss.edu/ | Name
+https://jecrcuniversity.edu.in/careers/ | Name
+https://www.iujaipur.edu.in/ | Name
+https://vacancies.paruluniversity.ac.in/ | Name
+https://www.iujharkhand.edu.in/careers | Name
+http://www.imsnoida.com/ | Name
+http://www.imrt.edu.in/ | Name
+http://www.himt.ac.in/ | Name
+http://www.iutripura.edu.in/ | Name
+http://www.adypu.edu.in/ | Name
+http://www.svus.edu.in/ | Name
+http://www.uudoon.in/ | Name
+http://www.meu.edu.in/ | Name
+https://sju.ac.in/ | Name
+https://aurora.edu.in/ | Name
+http://www.gitarattan.edu.in | Faculty Recruitment at Gitarattan International Bu
+https://www.alliance.edu.in/careers/ | Alliance University, Bengaluru- Recruitment 2026 T
+https://www.nmimsindore.org/ | SVKM’s NMIMS Deemed to be University
+https://www.cuhimachal.ac.in/ | Assistant Professor/ Associate Professor/ Professo
+http://www.seacomskillsuniversity.org/ | Seacom Skills University, Bolpur & Dhulagarh, Howrah
+https://www.klelawcollege.edu.in/career-2/ | KLE Technological University
+http://www.imesahibabad.ac.in/ | IME Group of Colleges, Ghaziabad Wanted Teaching a
+https://www.shobhituniversity.ac.in/ | Shobhit University
+http://www.msruas.ac.in/ | Ramaiah University of Applied Sciences, Bengaluru 
+https://sageuniversity.edu.in/ | Sage University, Bhopal
+https://fa-elxu-saasfaprod1.fa.ocs.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/job/14588/?utm_medium=jobshare&utm_source=External+Job+Share | SVKM’S NMIMS, School of Law
+https://www.manipal.edu/mu/campuses/mahe-bengaluru.html | Manipal Academy of Higher Education, Bengaluru
+https://nluassam.ac.in/recruitment.php | National Law University and Judicial Academy, Assam
+# rerun 2 after decide.ts change
