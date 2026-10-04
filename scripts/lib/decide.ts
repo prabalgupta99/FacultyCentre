@@ -17,6 +17,10 @@ const OTHER_DEPT = /medical|\bmba\b|management|engineering|technology|pharm|nurs
 // Law gate (deterministic, on top of the model): the notice names law, or the institution is a law institution and the notice names no other department.
 export const lawGate = (ctx: string, institution = '') => LAW_WORD.test(ctx) || (LAW_WORD.test(institution) && !OTHER_DEPT.test(ctx));
 
+// A hiring tag needs wording of an actual opening, not just a faculty title on a staff page.
+const APPLY_CUE = /(apply|applications?\b.{0,30}(invited|are invited|invites)|invit(e|es|ed)\b|last date|walk.?in|vacanc|recruit|advertis|advt|notification|wanted|required|openings?|posts? of|post of|call for|empanel)/i;
+export const hasApplyCue = (ctx: string) => APPLY_CUE.test(ctx);
+
 export function decide(judged: Judged[], pageRead: boolean, institution = '') {
   if (!pageRead) return { status: 'unknown' as Status, why: 'page not readable' };
   const jobs = judged.filter(j => j.a.is_job_notice.noul >= MIN_NOUL);
@@ -24,7 +28,7 @@ export function decide(judged: Judged[], pageRead: boolean, institution = '') {
   const lawish = (j: Judged) => ['law', 'mixed'].includes(pick(j.a.stream));
   const FACULTY_WORD = /professor|faculty|lecturer|teacher|teaching|instructor/i;
   const isFaculty = (j: Judged) => pick(j.a.role_type).startsWith('faculty') && FACULTY_WORD.test(j.n.context) && !/non[- ]?teaching/i.test(j.n.context.slice(0, 160));
-  const openLaw = jobs.filter(j => lawish(j) && LAW_WORD.test(j.n.context) && !OTHER_DEPT.test(j.n.context.slice(0, 200)) && pick(j.a.status) === 'open' && isFaculty(j));
+  const openLaw = jobs.filter(j => lawish(j) && LAW_WORD.test(j.n.context) && !OTHER_DEPT.test(j.n.context.slice(0, 200)) && pick(j.a.status) === 'open' && isFaculty(j) && hasApplyCue(j.n.context));
   if (openLaw.length) {
     const best = openLaw[0];
     return { status: 'hiring' as Status, why: 'open law notice', evidence: best.n, answers: best.a, openStreams: ['law'], role: pick(best.a.role_type) };
@@ -36,5 +40,9 @@ export function decide(judged: Judged[], pageRead: boolean, institution = '') {
   const unclear = jobs.some(j => pick(j.a.stream) === 'unclear' || (lawish(j) && pick(j.a.status) === 'unclear'));
   if (unclear || maybeJobs.length) return { status: 'unknown' as Status, why: 'notices with unclear stream, status or job-ness' };
   if (!jobs.length) return { status: 'unknown' as Status, why: judged.length ? 'no notice judged a job' : 'no job-like notices parsed (empty page or unreadable list)' };
-  return { status: 'not_hiring' as Status, why: 'job notices found, none open for law' };
+  // not_hiring needs real evidence: a closed law notice, or a read list (2+ job notices) where none is law. One stray notice proves nothing.
+  const closedLaw = jobs.some(j => lawish(j) && pick(j.a.status) === 'closed');
+  const nonLawList = jobs.length >= 2 && jobs.every(j => !lawish(j));
+  if (closedLaw || nonLawList) return { status: 'not_hiring' as Status, why: 'job notices found, none open for law' };
+  return { status: 'unknown' as Status, why: 'job notices seen but not conclusive for law' };
 }
