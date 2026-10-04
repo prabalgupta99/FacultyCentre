@@ -3,11 +3,11 @@ import assert from 'node:assert/strict';
 import { decide } from '../scripts/lib/decide';
 import { extractNotices, DATE_RE } from '../scripts/lib/extract';
 
-const n = { title: 't', context: 'Assistant Professor (Law) post', link: null, dates: [] };
+const n = { title: 't', context: 'Applications invited for the post of Assistant Professor (Law)', link: null, dates: [] };
 const a = (noul: number, stream: string, status: string, sc = 0.9) => ({ is_job_notice: { noul }, stream: { choice: stream, confidence: sc }, role_type: { choice: 'faculty_regular', confidence: 0.9 }, status: { choice: status, confidence: 0.9 } });
 
 test('open law notice => hiring', () => assert.equal(decide([{ n, a: a(0.95, 'law', 'open') }], true).status, 'hiring'));
-test('open non-law notice only => not_hiring (law-only default)', () => assert.equal(decide([{ n, a: a(0.95, 'other', 'open') }], true).status, 'not_hiring'));
+test('two open non-law notices => not_hiring (law-only default)', () => assert.equal(decide([{ n, a: a(0.95, 'other', 'open') }, { n: { ...n, title: 'u', context: 'Applications invited for Assistant Professor Physics' }, a: a(0.95, 'other', 'open') }], true).status, 'not_hiring'));
 test('closed law notice => not_hiring', () => assert.equal(decide([{ n, a: a(0.95, 'law', 'closed') }], true).status, 'not_hiring'));
 test('mixed counts as law', () => assert.equal(decide([{ n, a: a(0.95, 'mixed', 'open') }], true).status, 'hiring'));
 test('low confidence stream => unknown', () => assert.equal(decide([{ n, a: a(0.95, 'law', 'open', 0.3) }], true).status, 'unknown'));
@@ -49,3 +49,8 @@ test('hiring needs law named in the notice itself; institution-only law is a rev
   const ans: any = { ...a(0.85, 'law', 'open', 0.8), raw: { law: 0.8, open: 0.8, faculty: 0.8 } };
   const r: any = decide([{ n: m, a: ans }], true, 'National Law University');
   assert.notEqual(r.status, 'hiring'); });
+
+// Added 4 Oct: hiring needs an application cue; not_hiring needs evidence.
+const nCue = { title: 'Associate Professor of Law', context: 'Associate Professor of Law', link: null, dates: [] as string[] };
+test('faculty profile line with no application cue => not hiring tag', () => assert.notEqual(decide([{ n: nCue, a: a(0.95, 'law', 'open') }], true, 'KLE Law').status, 'hiring'));
+test('one stray non-law job notice => unknown, not not_hiring', () => assert.equal(decide([{ n, a: a(0.95, 'other', 'open') }], true).status, 'unknown'));
