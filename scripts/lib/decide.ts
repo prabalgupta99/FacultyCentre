@@ -40,9 +40,9 @@ export function decide(judged: Judged[], pageRead: boolean, institution = '') {
   const unclear = jobs.some(j => pick(j.a.stream) === 'unclear' || (lawish(j) && pick(j.a.status) === 'unclear'));
   if (unclear || maybeJobs.length) return { status: 'unknown' as Status, why: 'notices with unclear stream, status or job-ness' };
   if (!jobs.length) return { status: 'unknown' as Status, why: judged.length ? 'no notice judged a job' : 'no job-like notices parsed (empty page or unreadable list)' };
-  // not_hiring needs real evidence: a closed law notice, or a read list (2+ job notices) where none is law. One stray notice proves nothing.
+  // not_hiring needs real evidence: a closed law notice, or nothing weaker.
   const closedLaw = jobs.some(j => lawish(j) && pick(j.a.status) === 'closed');
-  const nonLawList = jobs.length >= 2 && jobs.every(j => !lawish(j));
-  if (closedLaw || nonLawList) return { status: 'not_hiring' as Status, why: 'job notices found, none open for law' };
+  // A list of non-law notices is not proof: the reader may have missed the law post (rerun 2: 6 of 7 such tags were wrong). Only a closed law notice proves not_hiring.
+  if (closedLaw) return { status: 'not_hiring' as Status, why: 'job notices found, none open for law' };
   return { status: 'unknown' as Status, why: 'job notices seen but not conclusive for law' };
 }
