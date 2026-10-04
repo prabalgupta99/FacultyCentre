@@ -44,7 +44,7 @@ const MapComponent: React.FC<MapProps> = ({
 
         const map = L.map(mapContainerRef.current, {
             zoomControl: false, // We will use custom zoom controls in App.tsx
-            attributionControl: false,
+            attributionControl: true,
             zoomAnimation: true,
             fadeAnimation: true,
             markerZoomAnimation: true,
