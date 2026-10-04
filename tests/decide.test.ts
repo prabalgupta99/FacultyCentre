@@ -7,7 +7,7 @@ const n = { title: 't', context: 'Applications invited for the post of Assistant
 const a = (noul: number, stream: string, status: string, sc = 0.9) => ({ is_job_notice: { noul }, stream: { choice: stream, confidence: sc }, role_type: { choice: 'faculty_regular', confidence: 0.9 }, status: { choice: status, confidence: 0.9 } });
 
 test('open law notice => hiring', () => assert.equal(decide([{ n, a: a(0.95, 'law', 'open') }], true).status, 'hiring'));
-test('two open non-law notices => not_hiring (law-only default)', () => assert.equal(decide([{ n, a: a(0.95, 'other', 'open') }, { n: { ...n, title: 'u', context: 'Applications invited for Assistant Professor Physics' }, a: a(0.95, 'other', 'open') }], true).status, 'not_hiring'));
+test('two open non-law notices => unknown (list of non-law notices is not proof)', () => assert.equal(decide([{ n, a: a(0.95, 'other', 'open') }, { n: { ...n, title: 'u', context: 'Applications invited for Assistant Professor Physics' }, a: a(0.95, 'other', 'open') }], true).status, 'unknown'));
 test('closed law notice => not_hiring', () => assert.equal(decide([{ n, a: a(0.95, 'law', 'closed') }], true).status, 'not_hiring'));
 test('mixed counts as law', () => assert.equal(decide([{ n, a: a(0.95, 'mixed', 'open') }], true).status, 'hiring'));
 test('low confidence stream => unknown', () => assert.equal(decide([{ n, a: a(0.95, 'law', 'open', 0.3) }], true).status, 'unknown'));
