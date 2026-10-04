@@ -28,8 +28,11 @@ export async function readDetail(n: Notice): Promise<Notice | null> {
     let text = d.text;
     const at = text.toLowerCase().indexOf(n.title.slice(0, 40).toLowerCase(), 200); // skip the site chrome at the top of the page
     if (at > 0) text = text.slice(at);
-    text = text.slice(0, 1800);
-    if (text.length < 500 && d.pdfs.length) { const p = await textOf(d.pdfs[0]).catch(() => null); if (p && p.text.length > 80) text = `${text} || ${p.text.slice(0, 1800)}`; }
+    let full = text; text = text.slice(0, 1800);
+    if (text.length < 500 && d.pdfs.length) { const p = await textOf(d.pdfs[0]).catch(() => null); if (p && p.text.length > 80) { full = `${full} || ${p.text}`; text = `${text} || ${p.text.slice(0, 1800)}`; } }
+    // Multi-department advert: the law post can sit far past the first 1800 chars. Add a window around the first law mention.
+    const lm = full.slice(1800).search(/\b(school of law|law school|department of law|faculty of law|legal studies|LL\.?\s?[BM]|\blaw\b)/i);
+    if (lm >= 0) text = `${text} ... ${full.slice(1800 + Math.max(0, lm - 300), 1800 + lm + 500)}`;
     if (text.length < 80) return null;
     return { title: n.title, context: `${n.title} || ${text}`, link: n.link, dates: text.match(DATE_RE) ?? [] };
   } catch { return null; }
