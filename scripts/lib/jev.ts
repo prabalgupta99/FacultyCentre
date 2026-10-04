@@ -41,6 +41,11 @@ async function call(state: string, questions: object): Promise<any> {
 /** Static answers are cached by notice-text hash; status is asked fresh (depends on today) and only when needed. */
 const toChoice = (x: any, yes: string, no: string) => { const p = x?.noul; if (typeof p !== 'number') return { choice: 'unclear', confidence: 0 }; return p >= 0.5 ? { choice: yes, confidence: p } : { choice: no, confidence: 1 - p }; };
 
+// The model said 'closed' for undated ticker lines (Allahabad, rerun 3). Without a date or an explicit closed word, closed cannot be claimed: unclear.
+export function undatedGuard(st: { choice: string; confidence: number }, n: { context: string; dates: string[] }) {
+  if (st.choice === 'closed' && n.dates.length === 0 && !/closed|has ended|expired|result|shortlist|cancel/i.test(n.context)) return { choice: 'unclear', confidence: 0 };
+  return st;
+}
 export async function judge(n: Notice, today: string, institution = ''): Promise<Answers> {
   // One call per notice with four yes/no questions. Cached by text + today. Probabilities map to the choice shape decide() reads.
   const key = hash('v2|' + institution + '|' + n.context + '|' + today);
@@ -53,7 +58,7 @@ export async function judge(n: Notice, today: string, institution = ''): Promise
     is_job_notice: st.is_job_notice,
     stream: toChoice(st.is_law, 'law', 'other'),
     role_type: toChoice(st.is_faculty, 'faculty_regular', 'non_teaching'),
-    status: toChoice(st.is_open, 'open', 'closed'),
+    status: undatedGuard(toChoice(st.is_open, 'open', 'closed'), n),
     raw: { law: st.is_law?.noul, open: st.is_open?.noul, faculty: st.is_faculty?.noul },
   } as any;
 }
