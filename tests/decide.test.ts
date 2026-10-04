@@ -73,3 +73,8 @@ test('undated law faculty notice with open-leaning model gets a review lead, not
   const nn = { title: 't', context: 'Recruitment for the Engagement of Contractual Faculty for B.A.LL.B.(Hons)', link: null, dates: [] as string[] };
   const ans: any = { is_job_notice: { noul: 0.97 }, stream: { choice: 'law', confidence: 0.98 }, role_type: { choice: 'faculty_regular', confidence: 0.98 }, status: { choice: 'unclear', confidence: 0 }, raw: { law: 0.98, open: 0.11, faculty: 0.98 } };
   const r: any = decide([{ n: nn, a: ans }], true, 'University of Allahabad'); assert.equal(r.status, 'unknown'); assert.ok(r.lead); });
+
+test('REGRESSION Allahabad ticker: later words like "result" in the same blob do not make the notice closed', async () => {
+  const { undatedGuard } = await import('../scripts/lib/jev');
+  const ctx = 'Recruitment for the Engagement of Contractual Faculty for B.A.LL.B.(Hons) Five year Integrated Course (Self Finance) | Press Release: Correction Window (Ph.D. Admissions-2026) | Press release of PGAT 26 result (PGAT 2 and IPS)';
+  assert.equal(undatedGuard({ choice: 'closed', confidence: 0.89 }, { context: ctx, dates: [] }).choice, 'unclear'); });
