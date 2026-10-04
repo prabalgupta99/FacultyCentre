@@ -57,9 +57,18 @@ const MapComponent: React.FC<MapProps> = ({
             zoomSnap: 0.5
         }).setView([21.7679, 78.8718], 5); // Center of India
 
-        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        // Basemap: CARTO Voyager (original look) when a free CARTO Basemaps key is set in
+        // VITE_CARTO_BASEMAPS_KEY; otherwise falls back to OpenStreetMap standard tiles.
+        const cartoKey = (import.meta as any).env?.VITE_CARTO_BASEMAPS_KEY as string | undefined;
+        const tileUrl = cartoKey
+            ? 'https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=' + cartoKey
+            : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+        const tileAttribution = cartoKey
+            ? '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://carto.com/attributions">CARTO</a>'
+            : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+        L.tileLayer(tileUrl, {
             maxZoom: 19,
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            attribution: tileAttribution,
             noWrap: false
         }).addTo(map);
 
