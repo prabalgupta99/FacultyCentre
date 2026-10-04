@@ -54,3 +54,13 @@ test('hiring needs law named in the notice itself; institution-only law is a rev
 const nCue = { title: 'Associate Professor of Law', context: 'Associate Professor of Law', link: null, dates: [] as string[] };
 test('faculty profile line with no application cue => not hiring tag', () => assert.notEqual(decide([{ n: nCue, a: a(0.95, 'law', 'open') }], true, 'KLE Law').status, 'hiring'));
 test('one stray non-law job notice => unknown, not not_hiring', () => assert.equal(decide([{ n, a: a(0.95, 'other', 'open') }], true).status, 'unknown'));
+
+test('window-derived law mention can be a lead but never a hiring tag', () => {
+  const w = { title: 'w', context: 'Faculty Hiring. Applications invited for Assistant Professor in School of Law Core Law Domains', link: null, dates: [] as string[], fromWindow: true };
+  const ans: any = { ...a(0.9, 'law', 'open'), raw: { law: 0.9, open: 0.9, faculty: 0.9 } };
+  const r: any = decide([{ n: w, a: ans }], true, 'Some University'); assert.notEqual(r.status, 'hiring'); });
+test('lawWindows finds a law domain list on a faculty hiring page', async () => {
+  const { lawWindows } = await import('../scripts/lib/extract');
+  const html = '<body><p>' + 'x '.repeat(200) + 'Faculty Hiring: Apply now for Assistant Professor. School of Law: Core Law Domains Jurisprudence, Criminal Law.</p></body>';
+  assert.ok(lawWindows(html, 'Other University').length >= 1);
+  assert.equal(lawWindows('<body><p>' + 'x '.repeat(200) + 'School of Law admission open for LLB students.</p></body>', '').length, 0); });
