@@ -1,6 +1,6 @@
 import * as cheerio from 'cheerio';
 import type { Browser } from '@playwright/test';
-import { extractNotices, prefilter, pageReadable, lawWindows, type Notice } from './extract';
+import { extractNotices, prefilter, pageReadable, lawWindows, DATE_RE, type Notice } from './extract';
 import { decide, type Judged, type Status } from './decide';
 import { judge } from './jev';
 import { pdfNotices } from './pdf';
@@ -71,7 +71,7 @@ export async function analyzeUrl(browser: Browser, url: string, name: string, to
       // Detail read: an undated, law-looking faculty notice with a link is opened so its real dates and wording are judged (max 3 per site).
       for (let k = 0; k < judgedAll.length && detailReads < 3; k++) {
         const j: any = judgedAll[k]; const r = j.a?.raw;
-        if (j.n.fromWindow || j.n.detail || !j.n.link || j.n.dates.length || !r || !(j.a.is_job_notice.noul >= 0.6) || !(r.law >= 0.5) || !(r.faculty >= 0.5)) continue;
+        if (j.n.fromWindow || j.n.detail || !j.n.link || (j.n.context.slice(0, 200).match(DATE_RE) || []).length || !r || !(j.a.is_job_notice.noul >= 0.6) || !(r.law >= 0.5) || !(r.faculty >= 0.5)) continue;
         detailReads++; const dn = await readDetail(j.n); if (!dn) continue; (dn as any).detail = true;
         const a1 = await judge(dn, today, name); v.jevCalls++; console.log('DETAIL ' + j.n.link + ' ' + JSON.stringify({ dates: dn.dates.slice(0, 4), job: (a1 as any).is_job_notice?.noul, raw: (a1 as any).raw }));
         if (freshness(dn.dates, today) === 'fresh') judgedAll[k] = { n: dn, a: a1 }; else { judgedAll.splice(k, 1); k--; staleSeen = true; }
