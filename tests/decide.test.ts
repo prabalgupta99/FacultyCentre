@@ -92,3 +92,7 @@ test('REGRESSION KLE: faculty profile line without application wording is not a 
   const nn = { title: 'Assistant Professor of Law', context: 'Assistant Professor of Law', link: null, dates: [] as string[] };
   const ans: any = { is_job_notice: { noul: 0.8 }, stream: { choice: 'law', confidence: 0.9 }, role_type: { choice: 'faculty_regular', confidence: 0.9 }, status: { choice: 'unclear', confidence: 0 }, raw: { law: 0.9, open: 0.6, faculty: 0.9 } };
   const r: any = decide([{ n: nn, a: ans }], true, 'KLE Law'); assert.ok(!r.lead); });
+
+test('REGRESSION NLS: "Work With Us" is a career link hint', async () => {
+  const src = (await import('node:fs')).readFileSync(new URL('../scripts/lib/analyze.ts', import.meta.url), 'utf8');
+  assert.ok(/work\.\?with\.\?us/.test(src)); });
