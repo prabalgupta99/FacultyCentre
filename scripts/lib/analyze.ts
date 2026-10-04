@@ -1,6 +1,6 @@
 import * as cheerio from 'cheerio';
 import type { Browser } from '@playwright/test';
-import { extractNotices, prefilter, pageReadable, type Notice } from './extract';
+import { extractNotices, prefilter, pageReadable, lawWindows, type Notice } from './extract';
 import { decide, type Judged, type Status } from './decide';
 import { judge } from './jev';
 import { pdfNotices } from './pdf';
@@ -67,6 +67,7 @@ export async function analyzeUrl(browser: Browser, url: string, name: string, to
       const notices = extractNotices(html, current).filter(prefilter).filter(n => keepFresh(n)).slice(0, MAX_NOTICES);
       v.notices += notices.length;
       for (const n of notices) { const a0 = await judge(n, today, name); judgedAll.push({ n, a: a0 }); v.jevCalls++; { const x: any = a0; console.log('NOTICE ' + JSON.stringify({ t: n.title.slice(0, 70), job: x.is_job_notice?.noul, st: x.stream?.choice + ':' + x.stream?.confidence, ro: x.role_type?.choice, su: x.status?.choice + ':' + x.status?.confidence, raw: x.raw })); } if ((decide(judgedAll, true, name) as any).status === 'hiring') break; }
+      if (hop < 3) for (const w of lawWindows(html, name).filter(w => keepFresh(w))) { const a0 = await judge(w, today, name); judgedAll.push({ n: w, a: a0 }); v.jevCalls++; console.log('WINDOW ' + current + ' ' + JSON.stringify({ t: w.context.slice(0, 160), job: (a0 as any).is_job_notice?.noul, raw: (a0 as any).raw })); }
       const d: any = decide(judgedAll, true, name);
       if (d.status === 'hiring') { Object.assign(v, { status: 'hiring', why: d.why, evidence: d.evidence, answers: d.answers, role: d.role }); return v; }
       for (const l of hintLinks(html, current, seen)) { queue.push(l); seen.add(l); }
